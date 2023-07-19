@@ -1,0 +1,14 @@
+#base robot_giant.pop
+#base robot_standard.pop
+
+WaveSchedule
+{
+	StartingCurrency		600
+	RespawnWaveTime 		5
+	CanBotsAttackWhileInSpawnRoom no
+	Templates
+	{
+
+    }
+
+}

@@ -1,0 +1,9 @@
+"UnlitGeneric"
+{
+	"$basetexture" "hud/leaderboad_class_heavy_sandvich_steak"
+	"$vertexcolor" 1
+	"$no_fullbright" 1
+	"$ignorez" 1
+	"%keywords" "tf"
+	"$translucent" 1
+}
