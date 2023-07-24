@@ -9,9 +9,14 @@ export class WaveInfo {
         this.id = Date.now().toString(36) + Math.random().toString(36).substring(2);
         if (wavemap != undefined) {
             const wavespawnlist = wavemap.get("WaveSpawn")
-            wavespawnlist.forEach(wavespawnmap => {
-                this.wavespawns.push(new WaveSpawn(this, undefined, wavespawnmap))
-            })
+            if (Array.isArray(wavespawnlist)) {
+                wavespawnlist.forEach(wavespawnmap => {
+                    this.wavespawns.push(new WaveSpawn(this, undefined, wavespawnmap))
+                })
+            }
+            else {
+                this.wavespawns.push(new WaveSpawn(this, undefined, wavespawnlist))
+            }
         }
     }
     addWaveSpawn(ws: WaveSpawn) {
@@ -19,11 +24,11 @@ export class WaveInfo {
         ws.wave = this
     }
     addWaveSpawnAtPos(ws: WaveSpawn, i: number) {
-        this.wavespawns.splice(i,0,ws)
+        this.wavespawns.splice(i, 0, ws)
         ws.wave = this
     }
     addTemplateAsWaveSpawn(tem: Template): WaveSpawn {
-        let ws = new WaveSpawn(this,tem)
+        let ws = new WaveSpawn(this, tem)
         this.addWaveSpawn(ws)
         return ws
     }
@@ -44,8 +49,8 @@ export class WaveInfo {
     }
     getPopFormat() {
         const popFormat = new Map<string, any>();
-        let wsar : Array<Map<string, any>> = []
-        this.wavespawns.forEach((ws)=>{
+        let wsar: Array<Map<string, any>> = []
+        this.wavespawns.forEach((ws) => {
             wsar.push(ws.getPopFormat())
         })
         popFormat.set("Checkpoint", "Yes")

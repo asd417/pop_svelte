@@ -1,0 +1,131 @@
+#base robot_giant.pop
+#base robot_standard.pop
+WaveSchedule
+{
+	StartingCurrency 600
+	RespawnWaveTime 5
+	CanBotsAttackWhileInSpawnRoom no
+	Templates
+	{
+
+	}
+	Wave
+	{
+		Checkpoint Yes
+		WaveSpawn
+		{
+			Name T_TFBot_Giant_Soldier
+			Where 
+			TotalCurrency 0
+			TotalCount 1
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TFBot
+			{
+				Class Soldier
+				Name "Giant Soldier"
+				ClassIcon soldier_giant
+				Skill Expert
+				Health 3800
+				WeaponRestrictions PrimaryOnly
+				Attributes HoldFireUntilFullReload
+				Attributes MiniBoss
+				CharacterAttributes
+				{
+					"move speed bonus" 0.5
+					"damage force reduction" 0.4
+					"airblast vulnerability multiplier" 0.4
+					"override footstep sound set" 3
+
+				}
+
+			}
+
+		}
+		WaveSpawn
+		{
+			Name T_TFBot_Chief_Heavyweapons_HealOnKill
+			Where 
+			TotalCurrency 0
+			TotalCount 1
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TFBot
+			{
+				Class Heavyweapons
+				Name "Giant Heavy"
+				ClassIcon heavy_deflector_healonkill
+				Skill Expert
+				Item "The Tungsten Toque"
+				Item "Deflector"
+				Health 70000
+				Scale 1.8
+				MaxVisionRange 1600
+				Attributes UseBossHealthBar
+				Attributes MiniBoss
+				WeaponRestrictions PrimaryOnly
+				ItemAttributes
+				{
+					ItemName "Deflector"
+					"damage bonus" 1.2
+					"attack projectiles" 2
+					"heal on kill" 8000
+
+				}
+				CharacterAttributes
+				{
+					"move speed bonus" 0.4
+					"damage force reduction" 0.3
+					"airblast vulnerability multiplier" 0.4
+					"airblast vertical vulnerability multiplier" 0.1
+					"rage giving scale" 0.9
+					"override footstep sound set" 2
+
+				}
+
+			}
+
+		}
+
+	}
+	Wave
+	{
+		Checkpoint Yes
+		WaveSpawn
+		{
+			Name T_TFBot_Giant_Scout
+			Where 
+			TotalCurrency 0
+			TotalCount 1
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TFBot
+			{
+				Class Scout
+				Name "Giant Scout"
+				ClassIcon scout_giant
+				Skill Expert
+				Health 1600
+				WeaponRestrictions PrimaryOnly
+				Attributes MiniBoss
+				CharacterAttributes
+				{
+					"damage force reduction" 0.7
+					"airblast vulnerability multiplier" 0.7
+					"override footstep sound set" 5
+
+				}
+
+			}
+
+		}
+
+	}
+
+}

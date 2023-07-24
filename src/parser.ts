@@ -7,18 +7,21 @@ export class PopParser {
     protected pop_dict: Map<string, any>;
     protected lines: string[];
     public templateLoader: TemplateLoader = new TemplateLoader();
+    public starting_currency: number = 600;
+    public respawn_time: number = 5;
 
-    protected waves : Array<WaveInfo> = []
+    public waves: Array<WaveInfo> = []
 
-    constructor() {}
+    constructor() { }
 
-    giveRawData(raw_data: string){
+    giveRawData(raw_data: string) {
         this.lines = raw_data.split("\n");
         console.log("Parser initiated");
         let v: number;
         [this.pop_dict, v] = this.read_pop(0);
         console.log("Printing pop file as dictionary: ", this.pop_dict);
     }
+
     getPopDict(): Map<string, any> {
         return this.pop_dict;
     }
@@ -172,17 +175,28 @@ export class PopParser {
         return text;
     }
 
-    wavesToMap(){
-        let newar : Array<Map<string,any>> = []
-        this.waves.forEach((w)=>{
+    readMissionInfo(){
+        this.starting_currency = +this.pop_dict.get("WaveSchedule").get("StartingCurrency")
+        this.respawn_time = +this.pop_dict.get("WaveSchedule").get("RespawnWaveTime")
+        console.log(this.starting_currency, this.respawn_time)
+    }
+
+    writeMissionInfo(){
+        this.pop_dict.get("WaveSchedule").set("StartingCurrency", this.starting_currency.toString())
+        this.pop_dict.get("WaveSchedule").set("RespawnWaveTime", this.respawn_time.toString())
+    }
+
+    wavesToMap() {
+        let newar: Array<Map<string, any>> = []
+        this.waves.forEach((w) => {
             newar.push(w.getPopFormat())
         })
         this.pop_dict.get("WaveSchedule").set("Wave", newar)
     }
 
-    mapToWaves(){
+    mapToWaves() {
         const waves = this.pop_dict.get("WaveSchedule").get("Wave")
-        if(waves == undefined){return []}
+        if (waves == undefined) { return [] }
         waves.forEach(wmap => {
             const wi = new WaveInfo(wmap)
             this.waves.push(wi)
@@ -191,9 +205,12 @@ export class PopParser {
     }
 
     writePopToData(): string {
+        this.wavesToMap()
+        this.writeMissionInfo()
         return this.write_pop(this.pop_dict, 0)
     }
-    async getTemplateArray(): Promise<Array<Template>> {
+
+    async loadTemplateArray(): Promise<Array<Template>> {
         this.templateLoader.addTemplate(this.pop_dict.get("WaveSchedule").get("Templates"));
         let templateImports: Array<string> = this.pop_dict.get("#base")
         console.log("Importing templates from: ", templateImports)
@@ -209,6 +226,13 @@ export class PopParser {
         return this.templateLoader.getTemplateArray();
     }
 
+    async addFileContentToTemplateArray(fileContent: string){
+        let p = new PopParser()
+        p.giveRawData(fileContent)
+        let r = await p.loadTemplateArray()
+        this.templateLoader.appendTemplate(r);
+    }
+
     async openImportFile(f: string): Promise<Array<Template>> {
         try {
             const response = await fetch(`pop/${f}`);
@@ -216,7 +240,7 @@ export class PopParser {
                 const fileContent: string = await response.text();
                 let p = new PopParser()
                 p.giveRawData(fileContent)
-                return p.getTemplateArray()
+                return p.loadTemplateArray()
             } else {
                 console.error('Failed to open file:', response.status, response.statusText);
                 return [];

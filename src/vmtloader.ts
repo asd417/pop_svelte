@@ -8,19 +8,21 @@ export class VMTLoader {
     async getBaseTexture(filename: string): Promise<string>{
         try {
             const response = await fetch(`${this.dir}leaderboard_class_${filename}.vmt`);
+            console.log("vmtloader: ", filename, `${this.dir}leaderboard_class_${filename}.vmt`)
             if (response.ok) {
                 const fileContent: string = await response.text();
                 const lines = fileContent.split("\n");
                 let basetexturename:string;
                 for(let l of lines){
-                    if(l.includes("$baseTexture")){
+                    if(l.includes("$baseTexture") || l.includes("$basetexture") || l.includes("$BaseTexture")|| l.includes("$Basetexture")){
                         basetexturename = l.split(" ")[1];
                         //console.log("base texture full name: ",basetexturename);
                         let regex = /(leaderboard_class_)\w+/g;
                         const info = basetexturename.match(regex)[0].substring(18);
+ 
                         //console.log("Icon vmt opened: ",info);
                         return info
-                    }
+                    } 
                 }
                 
             } else {

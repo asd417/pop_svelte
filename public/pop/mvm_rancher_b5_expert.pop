@@ -1,5 +1,6 @@
 #base robot_giant.pop
 #base robot_standard.pop
+#base robot_gatebot.pop
 
 //spawn points:
 //	spawnbot_main
@@ -403,7 +404,7 @@ WaveSchedule
 			Name w2_giant
 			Where spawnbot_center
 			TotalCurrency 200
-			TotalCount 16
+			TotalCount 20
 			MaxActive 4
 			SpawnCount 4
 			WaitBeforeStarting 2

@@ -1,12 +1,13 @@
 import { VMTLoader } from "./vmtloader.js";
 export class Template {
-    private name: string;
+    public name: string;
     public templateOrigin: string;
     public classNum: number;
     public classIcon: string;
     public alwaysCrit: boolean = false
+    public isTank: boolean = false
     public isGiant: boolean = false
-    private isGatebot: boolean = false
+    public isGatebot: boolean = false
     private defaultTemplate: Map<string, any> = new Map<string, any>();
     private RevertGateBotsBehaviorTemplate: Map<string, any> = new Map<string, any>();
 
@@ -14,14 +15,32 @@ export class Template {
 
     constructor(name, dict: Map<string, any>) {
         this.name = name;
-        this.templateOrigin = "";
+        this.templateOrigin = ""; 
         const isMap = dict instanceof Map;
-        if (!isMap) { return }
-        //console.log(dict)
-        //console.log(dict.get("EventChangeAttributes"))
-        //Check Gatebot
-        //console.log("Template: ", dict.get("Template"))
-        if (dict.get("EventChangeAttributes") != undefined) {
+        // if (!isMap) { return }
+        if (dict == undefined) {
+            // Default values
+            this.classNum = 0; // Scout
+            this.classIcon = "scout";
+            this.defaultTemplate.set("Class", "Scout")
+            return this
+        }
+
+        // extraAttributes is used to store attributes when 
+        // Tank Wavespawn
+        if (dict.get("StartingPathTrackNode") != undefined) {
+            this.isTank = true
+            this.isGiant = true
+            if (typeof (this.defaultTemplate.get("ClassIcon")) == "string") {
+                this.classIcon = this.defaultTemplate.get("ClassIcon");
+            } else {
+                this.classIcon = "tank"
+            }
+            this.classNum = 9
+            for (const [name, value] of dict.entries()) {
+                this.extraAttributes.set(name, value)
+            }
+        } else if (dict.get("EventChangeAttributes") != undefined) {
             //Is gatebot
             for (const [name, value] of dict.entries()) {
                 if (name !== "EventChangeAttributes") {
@@ -40,8 +59,7 @@ export class Template {
                     this.RevertGateBotsBehaviorTemplate.set(name, value)
                 }
             }
-        }
-        else if (dict.get("Template") != undefined) {
+        } else if (dict.get("Template") != undefined) {
             this.templateOrigin = dict.get("Template")
             console.log(
                 "Setting templateorigin as", this.templateOrigin
@@ -52,19 +70,20 @@ export class Template {
                 }
             }
             return
-        }
-        else {
+        } else {
             this.defaultTemplate = dict;
         }
 
-        if (this.templateOrigin === "") {
+        if (dict != undefined && this.templateOrigin === "" && !this.isTank) {
             //Store Class Icon
             let bot_class: string;
             bot_class = this.defaultTemplate.get("Class");
             if (bot_class === "demoman" || bot_class === "Demoman") { bot_class = "Demo" }
             if (bot_class === "heavyweapons" || bot_class === "Heavyweapons") { bot_class = "Heavy" }
+
             if (typeof (this.defaultTemplate.get("ClassIcon")) == "string") {
                 this.classIcon = this.defaultTemplate.get("ClassIcon");
+                //console.log("Class Icon????: ", this.classIcon)
             }
             else {
                 this.classIcon = bot_class;
@@ -75,7 +94,18 @@ export class Template {
             }
             this.classIcon = this.classIcon.toLowerCase()
             const v_loader = new VMTLoader()
-            v_loader.getBaseTexture(this.classIcon).then(result => this.classIcon = result)
+            try{
+                v_loader.getBaseTexture(this.classIcon).then((result) => {
+                    if(result == undefined)
+                    {
+                        console.log("ERROR:",this.classIcon, "VMT file exists but could not read basetexture")
+                    }
+                    this.classIcon = result
+                }) 
+            } catch (error){
+                console.log("Error Loading VMT file for ", this.classIcon, ": file does not exist")
+            }
+
             //Store classNum
             switch (bot_class.toLowerCase()) {
                 case "scout":
@@ -125,8 +155,18 @@ export class Template {
 
     }
     getdata(): [Map<string, any>, string] {
-        if (this.isGatebot) {
-
+        if(this.isTank){
+            return [this.extraAttributes, this.name]
+        } else if(this.templateOrigin != ""){
+            let rr_dict: Map<string, any> = new Map<string, any>();
+            rr_dict.set("Template", this.templateOrigin)
+            for (const [name, value] of this.extraAttributes.entries()) {
+                if (name != "Template") {
+                    rr_dict.set(name,value)
+                }
+            }
+            return [rr_dict, this.name]
+        } else if (this.isGatebot) {
             let rr_dict: Map<string, any> = new Map<string, any>();
 
             let d = new Map(this.defaultTemplate);

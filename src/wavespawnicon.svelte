@@ -47,29 +47,53 @@
     on:click={clicked} 
     draggable="true" 
     bind:this={waveelement}
->
-    {#each wavespawn.getBots() as bot}
-    <div>
-        {#if bot.templateOrigin == ""}
-        <Iconvisual iconname={bot.classIcon} isGiant={bot.isGiant} alwaysCrit={bot.alwaysCrit} templateorigin={""}/>
-        {:else}
-        <Iconvisual iconname={""} isGiant={false} alwaysCrit={false} templateorigin={bot.templateOrigin}/>
+>   <p class="wavespawn_info" style="text-align: left;margin:0px">
+    {wavespawn.getName()}
+    </p>
+    <div class="wavespawn_bots">
+        {#if wavespawn.isRandomChoice()}
+            <p class="wavespawn_info">
+                Random Choice:
+            </p>
         {/if}
-        <p class=wavespawn_info>
-            {wavespawn.getTotalCount()}
-        </p>
+        {#each wavespawn.getBots() as bot}
+        <div>
+            {#if bot.templateOrigin == ""}
+            <Iconvisual isgatebot={bot.isGatebot} iconname={bot.classIcon} isGiant={bot.isGiant} alwaysCrit={bot.alwaysCrit} templateorigin={""}/>
+            {:else}
+            <Iconvisual isgatebot={bot.isGatebot} iconname={""} isGiant={false} alwaysCrit={false} templateorigin={bot.templateOrigin}/>
+            {/if}
+        </div>
+        {/each}
+        {#if wavespawn.isSupport()}
+            <p class="wavespawn_info">
+                Infinite Support
+            </p>
+        {:else}
+            <p class="wavespawn_info">
+                x {wavespawn.getPerBot()}
+            </p>
+        {/if}
     </div>
-    {/each}
+    
+    
 </button>
 
 
 
 <style>
     @import "./global_styles.css";
+    
     .wavespawn_info {
         color: #ede4e0; 
+        padding-left: 10px;
+        padding-right: 10px;
     }
     .wavespawn {
+        background-color: #303030;
+        border-radius: 10px
+    }
+    .wavespawn_bots {
         cursor: pointer;
         width: auto;
         
@@ -77,7 +101,5 @@
         display:flex;
         flex-direction: row;
         
-        align-items: center;
-        background-color: #5e5750;
-        border-radius: 10px}
+        align-items: center;}
 </style>
