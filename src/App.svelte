@@ -21,6 +21,9 @@
 </script>
 
 <script lang="ts">
+	//Design Patterns that I might need to implement
+	//https://www.youtube.com/watch?v=tv-_1er1mWI
+
 	import { PopParser } from "./parser";
 	import { WaveInfo } from "./waveinfo";
 
@@ -29,17 +32,21 @@
 
 	import type { Template } from "./templateLoader";
 	import type { WaveSpawn } from "./wavespawn";
+    import Wavespawnicon from "./wavespawnicon.svelte";
+	import WavespawnEditor from "./wavespawnEditor.svelte";
 
 	const templatepop =
 		"#base robot_giant.pop\n#base robot_standard.pop\nWaveSchedule\n{\n\tStartingCurrency\t600\n\tRespawnWaveTime\t5\n\tCanBotsAttackWhileInSpawnRoom\tno\n\tTemplates\n\t{\n\n\t}\n}";
 
 	let templates: Array<Template> = [];
 	let waves;
-
 	let startcur: number = 0;
 	let respawntime: number = 0;
 	let fileloaded: boolean = false;
 	let wavespawnEditorDiv: HTMLDivElement;
+	let editorMove: boolean = false
+	let editorMoveOffsetX, editorMoveOffsetY;
+	let editorWavespawn : WaveSpawn = undefined;
 
 	function handleMissionFile() {
 		const fileInput: HTMLInputElement = document.getElementById(
@@ -54,19 +61,20 @@
 				const fileContent: string | ArrayBuffer = event.target?.result;
 
 				if (typeof fileContent === "string") {
+					STATICACCESS.parser.clear()
 					initiateParser(fileContent).then(() => {
 						fileloaded = true;
 						//sortTemplateContainer();
 						templates = STATICACCESS.parser.templateLoader.templates;
 					});
 				} else {
-					console.log("Unable to read file as text.");
+					console.error("Unable to read file as text.");
 				}
 			};
 
 			reader.readAsText(file);
 		} else {
-			console.log("No file selected");
+			console.error("No file selected");
 		}
 	}
 
@@ -84,17 +92,17 @@
 
 				if (typeof fileContent === "string") {
 					STATICACCESS.parser.addFileContentToTemplateArray(fileContent);
-					console.log("Finished LLoading Extra Templates");
+					console.info("Finished Loading Extra Templates");
 					templates = STATICACCESS.parser.templateLoader.templates;
 					//sortTemplateContainer();
 				} else {
-					console.log("Unable to read file as text.");
+					console.error("Unable to read file as text.");
 				}
 			};
 
 			reader.readAsText(file);
 		} else {
-			console.log("No file selected");
+			console.error("No file selected");
 		}
 	}
 
@@ -107,7 +115,7 @@
 
 	function downloadPopAsFile() {
 		let raw_string = STATICACCESS.parser.writePopToData();
-		console.log("pop dict:", STATICACCESS.parser.getPopDict());
+		console.info("Pop dict:", STATICACCESS.parser.getPopDict());
 		downloadAsFile("generated.pop", raw_string);
 	}
 
@@ -127,13 +135,13 @@
 	async function initiateParser(filecontent: string) {
 		STATICACCESS.parser.giveRawData(filecontent);
 		await STATICACCESS.loadTemplatesAndWaves();
-		console.log("Finished Loading Templates and Waves");
+		console.info("Finished Loading Templates and Waves");
 		//sortTemplateContainer();
 		waves = STATICACCESS.parser.waves;
 		startcur = STATICACCESS.parser.starting_currency;
 		respawntime = STATICACCESS.parser.respawn_time;
 		templates = STATICACCESS.parser.templateLoader.templates;
-		console.log(startcur, respawntime);
+		//console.log(startcur, respawntime);
 	}
 
 	function sortTemplateContainer() {
@@ -184,7 +192,7 @@
 	}
 
 	function checkwaves() {
-		console.log(STATICACCESS.parser.waves);
+		console.info("Check Waves:", STATICACCESS.parser.waves);
 		templates = STATICACCESS.parser.templateLoader.templates;
 	}
 
@@ -194,13 +202,13 @@
 	}
 
 	function removeWave(event: CustomEvent) {
-		//console.log("Removing", event.detail);
+		console.info("Removing", event.detail);
 
 		STATICACCESS.parser.waves.forEach((w, i) => {
-			console.log(i, w.getID());
+			//console.log(i, w.getID());
 			if (w.getID() === event.detail.id) {
 				STATICACCESS.parser.waves.splice(i, 1);
-				console.log("found");
+				//console.log("found");
 			}
 		});
 		waves = STATICACCESS.parser.waves;
@@ -209,99 +217,123 @@
 		waves = STATICACCESS.parser.waves;
 	}
 	function handleStartCurChange(event) {
-		console.log("Called handleStartCurChange");
+		//console.log("Called handleStartCurChange");
 		startcur = parseInt(event.target.value);
 		STATICACCESS.parser.starting_currency = startcur;
 	}
 	function handleRespawnTimeChange(event) {
-		console.log("Called handleRespawnTimeChange");
+		//console.log("Called handleRespawnTimeChange");
 		respawntime = parseInt(event.target.value);
 		STATICACCESS.parser.respawn_time = respawntime;
 	}
 	function editorMouseUp(event){
+		editorMove = false
+		//console.log("Stop moving")
+	}
+	function editorMouseDown(event: MouseEvent){
+		const element = event.target as Element;
+		console.log(event.target, event.currentTarget, element.nodeName)
 
-	}
-	function editorMouseDown(event){
+		if(element.nodeName != "INPUT")
+		{
+			editorMove = true
+			editorMoveOffsetX = event.x - wavespawnEditorDiv.getBoundingClientRect().left;
+			editorMoveOffsetY = event.y - wavespawnEditorDiv.getBoundingClientRect().top;
+		}
 		
 	}
-	function editorMouseMove(event){
-		
+	function editorMouseMove(event: MouseEvent){
+		if(editorMove){
+			wavespawnEditorDiv.style.left = event.x - editorMoveOffsetX + window.scrollX + "px"
+			wavespawnEditorDiv.style.top = event.y - editorMoveOffsetY + window.scrollY + "px"
+			//console.log("Moving", event.x, event.y )
+		}
+	}
+	function wavespawnSelected(event){
+		editorWavespawn = event.detail.wavespawn
 	}
 </script>
 
 <main>
-	
-		<h1>POP Editor</h1>
-		<p>
-			Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn
-			how to build Svelte apps.
-		</p>
-		<input type="file" id="popfileInput" />
-		<button on:click={handleMissionFile}>Upload Mission POP</button>
-		{#if fileloaded}
-			<div class="wavespawneditor" 
-				draggable="true" 
-				bind:this={wavespawnEditorDiv}
-				on:mouseup={editorMouseUp} 
-				on:mousedown={editorMouseDown}
-				on:mousemove={editorMouseMove}> 
 
-			</div>
+	<h1>POP Editor</h1>
+	<p>
+		Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn
+		how to build Svelte apps.
+	</p>
+	<input type="file" id="popfileInput" />
+	<button on:click={handleMissionFile}>Upload Mission POP</button>
+	{#if fileloaded}
+		<div class="wavespawneditor noselect" 
+			bind:this={wavespawnEditorDiv}
+			on:mouseup={editorMouseUp} 
+			on:mousedown={editorMouseDown}
+			on:mousemove={editorMouseMove}
+			draggable="false"
+			> 
+			{#if editorWavespawn != undefined}
+				<WavespawnEditor wavespawn={editorWavespawn} on:WavespawnUpdate={updateWavebars} />
+			{:else}
+				<p>Click a wavespawn to edit</p>
+			{/if}
+			
+		</div>
 
-			<input type="file" id="templatefileInput" />
-			<button on:click={handleTemplateFile}>Upload Template POP</button>
-			<div>
-				<label for="startCurSelector">Starting Currency:</label>
-				<input
-					type="number"
-					id="startCurSelector"
-					name="startingcurrency"
-					min="0"
-					max="10000"
-					step="50"
-					bind:value={startcur}
-					on:change={handleStartCurChange}
-					autocomplete="off"
-				/>
-			</div>
-			<div>
-				<label for="respawnTimeSelector">Player Respawn Time:</label>
-				<input
-					type="number"
-					id="respawnTimeSelector"
-					name="respawntime"
-					min="1"
-					max="20"
-					step="1"
-					bind:value={respawntime}
-					on:change={handleRespawnTimeChange}
-					autocomplete="off"
-				/>
-			</div>
-			<div class="contentbox">
-				<div id="wavebarcontainer">
-					{#each waves as w}
-						<Wavebar
-							on:removeWave={removeWave}
-							on:updateWaveBars={updateWavebars}
-							waveinfo={w}
-						/>
-					{/each}
-				</div>
-			</div>
-			<button on:click={addwave}>Add Wave</button>
-			<button on:click={checkwaves}>Check Waves</button>
-			<button on:click={downloadPopAsFile}>Download Pop</button>
-			<div id="templatecontainer">
-				{#each templates as t}
-					<Templateicon template={t} />
+		<input type="file" id="templatefileInput" />
+		<button on:click={handleTemplateFile}>Upload Template POP</button>
+		<div class="noselect">
+			<label for="startCurSelector">Starting Currency:</label>
+			<input
+				type="number"
+				id="startCurSelector"
+				name="startingcurrency"
+				min="0"
+				max="10000"
+				step="50"
+				bind:value={startcur}
+				on:change={handleStartCurChange}
+				autocomplete="off"
+			/>
+		</div>
+		<div class="noselect">
+			<label for="respawnTimeSelector">Player Respawn Time:</label>
+			<input
+				type="number"
+				id="respawnTimeSelector"
+				name="respawntime"
+				min="1"
+				max="20"
+				step="1"
+				bind:value={respawntime}
+				on:change={handleRespawnTimeChange}
+				autocomplete="off"
+			/>
+		</div>
+		<div class="contentbox">
+			<div id="wavebarcontainer">
+				{#each waves as w}
+					<Wavebar
+						on:removeWave={removeWave}
+						on:updateWaveBars={updateWavebars}
+						on:wavespawnSelectEvent={wavespawnSelected}
+						waveinfo={w}
+					/>
 				{/each}
 			</div>
-			<div class="contentbox" />
-		{:else}
-			<button on:click={newPop}>Create New Pop File</button>
-		{/if}
-	
+		</div>
+		<button on:click={addwave}>Add Wave</button>
+		<button on:click={checkwaves}>Check Waves</button>
+		<button on:click={downloadPopAsFile}>Download Pop</button>
+		<div id="templatecontainer">
+			{#each templates as t}
+				<Templateicon template={t} />
+			{/each}
+		</div>
+		<div class="contentbox" />
+	{:else}
+		<button on:click={newPop}>Create New Pop File</button>
+	{/if}
+
 </main>
 
 <style>
@@ -313,15 +345,22 @@
 		justify-content: center;
 	}
 
+	.noselect {
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		-khtml-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+	}
+
 	.wavespawneditor {
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		margin-right: -50%;
-		transform: translate(-50%, -50%);
+		position: absolute;
+		top: 250px;
+		left: 250px;
 		background-color: #303030;
-		width:300px;
-		height:300px;
+		min-width:300px;
+		min-height:200px;
 		z-index: 4;
 		border: 1px solid #656565;
 		border-radius: 10px;

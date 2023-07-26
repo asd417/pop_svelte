@@ -4,6 +4,7 @@
     import { compute_rest_props } from "svelte/internal";
     export let template: Template;
     let thisnode: HTMLElement;
+    //let iconvisual: Iconvisual;
 
     let isDragged = false;
     let startX = 0;
@@ -19,7 +20,7 @@
     let showname : string = "hidden"
 
     function loaded(node) {
-        console.log("IS TANK:", template.isTank)
+        //console.log("IS TANK:", template.isTank)
         thisnode = node;
         if(template.templateOrigin != ""){
             thisnode.setAttribute("classNum", template.classNum.toString());
@@ -36,6 +37,9 @@
         let dragged = event.target as HTMLElement
         event.dataTransfer.setData("templatename",template.getName())
         event.dataTransfer.setData("draggedID",dragged.id)
+        nametagdiv.style.visibility = "hidden"
+        nametagdiv.style.width = "0px"
+        //event.dataTransfer.setDragImage(,50,50)
     }
 
     function handleDragEnd(event) {
@@ -43,6 +47,7 @@
         endX = event.clientX;
         endY = event.clientY;
         isDragged = false;
+        nametagdiv.style.width = ""
     }
     function showName(event){
         showname = "visible"
@@ -52,10 +57,15 @@
 
         let left_adjusted = Math.min(event.pageX, window.innerWidth - nametagboxsize.width - 50)
         nametagdiv.style.left = left_adjusted.toString()+"px";
-        nametagdiv.style.top = event.pageY.toString()+"px";
+        nametagdiv.style.top = (event.pageY + 15).toString()+"px";
+        nametagdiv.style.width = ""
         //console.log(nametagdiv.style.left, nametagdiv.style.top)
-        
-        
+    }
+    function moveName(event){
+        let left_adjusted = Math.min(event.pageX, window.innerWidth - nametagboxsize.width - 50)
+        nametagdiv.style.left = left_adjusted.toString()+"px";
+        nametagdiv.style.top = (event.pageY + 15).toString() +"px";
+        nametagdiv.style.width = ""
     }
     function hideName(event){
         showname = "hidden"
@@ -72,6 +82,7 @@
     on:dragstart={handleDragStart} 
     on:dragend={handleDragEnd} 
     on:mouseover={showName}
+    on:mousemove={moveName}
     on:mouseleave={hideName}
     on:focus={showName}
     on:focusout={hideName}

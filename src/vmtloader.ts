@@ -8,7 +8,7 @@ export class VMTLoader {
     async getBaseTexture(filename: string): Promise<string>{
         try {
             const response = await fetch(`${this.dir}leaderboard_class_${filename}.vmt`);
-            console.log("vmtloader: ", filename, `${this.dir}leaderboard_class_${filename}.vmt`)
+            //console.log("vmtloader: ", filename, `${this.dir}leaderboard_class_${filename}.vmt`)
             if (response.ok) {
                 const fileContent: string = await response.text();
                 const lines = fileContent.split("\n");

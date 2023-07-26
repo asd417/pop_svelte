@@ -9,17 +9,26 @@ export class PopParser {
     public templateLoader: TemplateLoader = new TemplateLoader();
     public starting_currency: number = 600;
     public respawn_time: number = 5;
-
     public waves: Array<WaveInfo> = []
 
     constructor() { }
 
+    clear() {
+        this.raw_pop = []
+        this.pop_dict = undefined
+        this.lines = []
+        this.templateLoader = new TemplateLoader();
+        this.starting_currency = 0
+        this.respawn_time = 0
+        this.waves = []
+    }
+
     giveRawData(raw_data: string) {
         this.lines = raw_data.split("\n");
-        console.log("Parser initiated");
+        console.info("Parser initiated");
         let v: number;
         [this.pop_dict, v] = this.read_pop(0);
-        console.log("Printing pop file as dictionary: ", this.pop_dict);
+        console.info("Printing pop file as dictionary: ", this.pop_dict);
     }
 
     getPopDict(): Map<string, any> {
@@ -69,8 +78,10 @@ export class PopParser {
                         scope_map.set(attribute, r);
                     }
                     skippos = innerSkippos;
+                    
+                    
                 } else {
-                    console.log(prev_line, startpos, startpos + pos)
+                    //console.log(prev_line, startpos, startpos + pos)
                     throw new Error("Section started but it has no name?");
                 }
                 pos += 1;
@@ -110,7 +121,6 @@ export class PopParser {
             //console.log(`Key: ${key}, Value: ${value}`);
         });
         return [scope_map, pos];
-
     }
 
     parse_line(line: string): string[] {
@@ -171,14 +181,13 @@ export class PopParser {
                 text += "\n" + "\t".repeat(depths) + "}\n";
             }
         }
-
         return text;
     }
 
     readMissionInfo(){
         this.starting_currency = +this.pop_dict.get("WaveSchedule").get("StartingCurrency")
         this.respawn_time = +this.pop_dict.get("WaveSchedule").get("RespawnWaveTime")
-        console.log(this.starting_currency, this.respawn_time)
+        //console.log(this.starting_currency, this.respawn_time)
     }
 
     writeMissionInfo(){
@@ -211,12 +220,16 @@ export class PopParser {
     }
 
     async loadTemplateArray(): Promise<Array<Template>> {
-        this.templateLoader.addTemplate(this.pop_dict.get("WaveSchedule").get("Templates"));
+        const embed_templates = this.pop_dict.get("WaveSchedule").get("Templates")
+        if(embed_templates != undefined){
+            console.info("Found Embeded Templates")
+            this.templateLoader.addTemplate(embed_templates);
+        }
         let templateImports: Array<string> = this.pop_dict.get("#base")
-        console.log("Importing templates from: ", templateImports)
+        console.info("Importing templates from: ", templateImports)
         if (Array.isArray(templateImports)) {
             for (const f of templateImports) {
-                console.log(`Opening import ${f}`)
+                console.info(`Opening import ${f}`)
                 let ta: Array<Template>;
                 let result = await this.openImportFile(f)
                 ta = result;

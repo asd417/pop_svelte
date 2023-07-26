@@ -107,11 +107,16 @@
     }
 
     function newWaveSpawnClicked() {
-        const t :Template = new Template("", undefined)
+        const t :Template = new Template(undefined)
         console.log(`Created: ${t}`)
         const new_wavespawn = new WaveSpawn(waveinfo, t)
         waveinfo.addWaveSpawn(new_wavespawn);
         dispatch("updateWaveBars");
+    }
+
+    function wavespawnSelectEventBubble(event) {
+        const ws = event.detail.wavespawn
+        dispatch("wavespawnSelectEvent",{wavespawn : ws});
     }
 
     $: {
@@ -135,6 +140,7 @@
         <Wavespawnicon
             wavespawn={entry}
             bind:waveelement={wavespawniconlist[index]}
+            on:wavespawnSelectEvent={wavespawnSelectEventBubble}
         />
     {/each}
     <button class="wavespawn" on:click={newWaveSpawnClicked}>

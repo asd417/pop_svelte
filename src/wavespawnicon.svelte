@@ -6,12 +6,15 @@
     export let wavespawn: WaveSpawn;
     export let waveelement;
     
-
     let isDragged = false;
     let startX = 0;
     let startY = 0;
     let endX = 0;
     let endY = 0;
+
+    import { createEventDispatcher } from 'svelte';
+
+    const dispatch = createEventDispatcher();
 
     function handleDragStart(event:DragEvent) {
         // Store the initial coordinates of the draggable element
@@ -34,6 +37,7 @@
     function clicked(){
         console.log(wavespawn)
         wavespawn = wavespawn
+        dispatch('wavespawnSelectEvent', { wavespawn: wavespawn });
     }
 
     //use:action to call function on element creation

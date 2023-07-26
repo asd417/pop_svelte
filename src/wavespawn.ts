@@ -10,15 +10,15 @@ export class WaveSpawn {
 
 
     // These keyvalues are stored for fast access
-    protected name: string = "" //Name
-    protected where: string = "" // Where
-    protected totalcurrency: number = 0 //TotalCurrency
+    protected Name: string = "" //Name
+    protected Where = "" // Where
+    protected TotalCurrency: number = 0 //TotalCurrency
     //If not randomchoice and multiple bots, it is squad
     protected randomchoice: boolean;
-    protected support: boolean = false //Support
-    protected totalcount: number = 1 //TotalCount
-    protected maxactive: number = 1 //MaxActive
-    protected spawncount: number = 1 //SpawnCount
+    protected Support: boolean = false //Support
+    protected TotalCount: number = 1 //TotalCount
+    protected MaxActive: number = 1 //MaxActive
+    protected SpawnCount: number = 1 //SpawnCount
     protected perbot : number = 1
 
     protected keylist : Array<string> = ["Name", "Where", "TotalCurrency", "Support", "TotalCount", "MaxActive", "SpawnCount", "TFBot", "Squad", "RandomChoice", "Tank"]
@@ -35,12 +35,12 @@ export class WaveSpawn {
             console.log("Processing ", wavespawnmap)
             //this.where = wavespawnmap.get("Where")
             
-            this.name = this.readOrDefault(wavespawnmap, "Name", "")
-            this.where = this.readOrDefault(wavespawnmap,"Where","")
-            this.totalcurrency = this.readOrDefault(wavespawnmap, "TotalCurrency", 0)
-            this.totalcount = this.readOrDefault(wavespawnmap,"TotalCount",1)
-            this.maxactive = this.readOrDefault(wavespawnmap, "MaxActive", 1)
-            this.spawncount = this.readOrDefault(wavespawnmap, "SpawnCount", 1)
+            this.Name = this.readOrDefault(wavespawnmap, "Name", "")
+            this.Where = this.readOrDefault(wavespawnmap,"Where","")
+            this.TotalCurrency = this.readOrDefault(wavespawnmap, "TotalCurrency", 0)
+            this.TotalCount = this.readOrDefault(wavespawnmap,"TotalCount",1)
+            this.MaxActive = this.readOrDefault(wavespawnmap, "MaxActive", 1)
+            this.SpawnCount = this.readOrDefault(wavespawnmap, "SpawnCount", 1)
 
             const squadinfo = wavespawnmap.get("Squad")
             const randomchoiceinfo = wavespawnmap.get("RandomChoice")
@@ -62,13 +62,13 @@ export class WaveSpawn {
                 if (Array.isArray(group)) {
                     // Multiple Bots
                     group.forEach(botmap => {
-                        this.bots.push(new Template("", botmap))
+                        this.bots.push(new Template(botmap))
                     })
-                    this.perbot = this.totalcount / group.length
+                    this.perbot = this.TotalCount / group.length
                 } else {
                     // Single Bot
-                    this.bots.push(new Template("", group))
-                    this.perbot = this.totalcount 
+                    this.bots.push(new Template(group))
+                    this.perbot = this.TotalCount 
                 }
                 this.randomchoice = false
             } else if (randomchoiceinfo != undefined) {
@@ -89,14 +89,14 @@ export class WaveSpawn {
                 if (Array.isArray(group)) {
                     // Multiple Bots
                     group.forEach(botmap => {
-                        this.bots.push(new Template("", botmap))
+                        this.bots.push(new Template(botmap))
                     })
                     
                 } else {
                     // Single Bot
-                    this.bots.push(new Template("", group))
+                    this.bots.push(new Template(group))
                 }
-                this.perbot = this.totalcount 
+                this.perbot = this.TotalCount 
                 this.randomchoice = true
             } else {
                 // Single Bot
@@ -111,12 +111,12 @@ export class WaveSpawn {
                 } else {
                     throw new Error("Tank and TFBot in same wavespawn and are not grouped to squad or randomchoice")
                 }
-                this.bots.push(new Template("", map))
-                this.perbot = this.totalcount
+                this.bots.push(new Template(map))
+                this.perbot = this.TotalCount
             }
             const sup = wavespawnmap.get("Support")
             if(sup === "1"){
-                this.support = true
+                this.Support = true
             }
             for (const [name, value] of wavespawnmap.entries()) {
                 if(!this.keylist.includes(name)){
@@ -131,8 +131,20 @@ export class WaveSpawn {
             } else {
                 throw new Error("Error: New Wavespawn created without template")
             }
-            this.name = tfbot.getName();
+            this.Name = tfbot.getName();
 
+        }
+    }
+
+    updateKV(key, value) {
+        if(this.keylist.includes(key)){
+            type ObjectKey = keyof typeof WaveSpawn;
+
+            const keyname = key as ObjectKey;
+            this[keyname] = value
+            console.log("Updating Wavespawn Keyvalue: ", this)
+        } else { 
+            this.extraAttributes.set(key, value)
         }
     }
 
@@ -148,21 +160,26 @@ export class WaveSpawn {
         const popFormat = new Map<string, any>();
         //popFormat.set("bots", this.bots);
         //popFormat.set("customAttributes", this.customAttributes);
-        popFormat.set("Name", this.name.toString());
+        popFormat.set("Name", this.Name.toString());
         
-        popFormat.set("TotalCurrency", this.totalcurrency.toString());
-        popFormat.set("TotalCount", this.totalcount.toString());
-        popFormat.set("MaxActive", this.maxactive.toString());
-        popFormat.set("SpawnCount", this.spawncount.toString());
-        if(this.support){
+        popFormat.set("TotalCurrency", this.TotalCurrency.toString());
+        popFormat.set("TotalCount", this.TotalCount.toString());
+        popFormat.set("MaxActive", this.MaxActive.toString());
+        popFormat.set("SpawnCount", this.SpawnCount.toString());
+        if(this.Support){
             popFormat.set("Support", "1")
         }
         
-
         if (this.tank == true){
             popFormat.set("Tank",this.bots[0].getdata()[0])
         } else if (this.bots.length > 1) {
-            popFormat.set("Where", this.where.toString());
+            if(typeof(this.Where) == "string"){
+                popFormat.set("Where", this.Where.toString());
+            }
+            else {
+                popFormat.set("Where", this.Where);
+            }
+            
             let squadmap : Map<string, any> = new Map<string, any>()
             let ar : Array<Map<string, any>> = []
             this.bots.forEach((bot)=>{
@@ -172,13 +189,22 @@ export class WaveSpawn {
             squadmap.set("TFBot", ar)
             popFormat.set("Squad", squadmap);
         } else if (this.bots.length == 1) {
-            popFormat.set("Where", this.where.toString());
+            if(typeof(this.Where) == "string"){
+                popFormat.set("Where", this.Where.toString());
+            }
+            else {
+                popFormat.set("Where", this.Where);
+            }
             popFormat.set("TFBot", this.bots[0].getdata()[0]);
         }
         for (const [name, value] of this.extraAttributes.entries()) {
             popFormat.set(name, value)
         }
         return popFormat;
+    }
+
+    addTemplateAsBot(bot: Template) {
+        this.bots.push(bot)
     }
 
     writeTFBot(bot: Template): Map<string, any> {
@@ -208,27 +234,27 @@ export class WaveSpawn {
     }
 
     getName(): string {
-        return this.name;
+        return this.Name;
     }
 
     getWhere(): string {
-        return this.where;
+        return this.Where;
     }
 
     getTotalCurrency(): number {
-        return this.totalcurrency;
+        return this.TotalCurrency;
     }
 
     getTotalCount(): number {
-        return this.totalcount;
+        return this.TotalCount;
     }
 
     getMaxActive(): number {
-        return this.maxactive;
+        return this.MaxActive;
     }
 
     getSpawnCount(): number {
-        return this.spawncount;
+        return this.SpawnCount;
     }
 
     getPerBot(): number {
@@ -244,7 +270,17 @@ export class WaveSpawn {
     }
 
     isSupport() : boolean {
-        return this.support
+        return this.Support
+    }
+
+    getWaveType(): string {
+        if(this.bots.length > 1 && this.randomchoice)
+        {
+            return "Random Choice"
+        } else if (this.bots.length > 1) {
+            return "Squad"
+        }
+        return "TFBot"
     }
 }
 

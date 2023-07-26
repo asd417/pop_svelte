@@ -18,7 +18,12 @@
     }
     $ : {
         // This console.log call allows svelte to track the changes in these variables. Therefore it should not be commented out lol
-        console.log("Icon updated", templateorigin, iconname, alwaysCrit, isGiant, isgatebot)
+        //console.log("Icon updated", templateorigin, iconname, alwaysCrit, isGiant, isgatebot)
+        templateorigin = templateorigin
+        iconname = iconname
+        alwaysCrit = alwaysCrit
+        isGiant = isGiant
+        isgatebot = isgatebot
         onUpdateIcon()
     }
     //console.log("Icon updated", iconname, alwaysCrit, isGiant)
@@ -33,6 +38,7 @@
                 iconname = tem.classIcon
                 isGiant = tem.isGiant
                 alwaysCrit = tem.alwaysCrit
+                isgatebot = tem.isGatebot
                 if(iconname == undefined){
                     console.log(templateorigin,"has no icon?: ", tem)
                 }
@@ -82,6 +88,7 @@
         width: 20%;
         height: 20%;
         border-radius: 4px;
+        background-color: #fcfae6;
         z-index: 1; /* Make sure the label is stacked above the image */
         pointer-events: none;
     }
