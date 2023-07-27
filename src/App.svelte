@@ -232,15 +232,14 @@
 	}
 	function editorMouseDown(event: MouseEvent){
 		const element = event.target as Element;
-		console.log(event.target, event.currentTarget, element.nodeName)
+		//console.log(event.target, event.currentTarget, element.nodeName)
 
-		if(element.nodeName != "INPUT")
+		if(element.nodeName != "INPUT" && !element.classList.contains("blockEditorMove"))
 		{
 			editorMove = true
 			editorMoveOffsetX = event.x - wavespawnEditorDiv.getBoundingClientRect().left;
 			editorMoveOffsetY = event.y - wavespawnEditorDiv.getBoundingClientRect().top;
 		}
-		
 	}
 	function editorMouseMove(event: MouseEvent){
 		if(editorMove){

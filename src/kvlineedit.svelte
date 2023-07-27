@@ -27,7 +27,10 @@
     function removeLastEntry(event){
         if(arrayValue){
             value.pop()
-            arrayValue = false
+            if(value.length == 1){
+                arrayValue = false
+                value = value[0]
+            }
         }
         value = value
         valueChange(undefined)

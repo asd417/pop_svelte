@@ -61,12 +61,13 @@
             </p>
         {/if}
         {#each wavespawn.getBots() as bot}
-        <div>
+        <div style="margin:1px">
             {#if bot.templateOrigin == ""}
             <Iconvisual isgatebot={bot.isGatebot} iconname={bot.classIcon} isGiant={bot.isGiant} alwaysCrit={bot.alwaysCrit} templateorigin={""}/>
             {:else}
             <Iconvisual isgatebot={bot.isGatebot} iconname={""} isGiant={false} alwaysCrit={false} templateorigin={bot.templateOrigin}/>
             {/if}
+            <Iconvisual template={bot}/>
         </div>
         {/each}
         {#if wavespawn.isSupport()}
@@ -101,9 +102,10 @@
         cursor: pointer;
         width: auto;
         
-        min-height: 85px;
+        min-height: 55px;
         display:flex;
         flex-direction: row;
-        
+        margin-top: 2px;
+        margin-bottom: 2px;
         align-items: center;}
 </style>

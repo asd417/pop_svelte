@@ -35,13 +35,7 @@ export class Template {
             this.setUpGateBot(dict)
         //} else if (dict.get("Template") != undefined) {
         } else if (this.readKey(dict,"Template") != undefined) {
-            this.templateOrigin = this.readKey(dict,"Template")
-            //console.log("Setting templateorigin as", this.templateOrigin)
-            for (const [name, value] of dict.entries()) {
-                if (name != "Template") {
-                    this.extraAttributes.set(name, value)
-                }
-            }
+            this.setUpTemplateBot(dict)
             return
         } else {
             this.defaultTemplate = dict;
@@ -52,6 +46,16 @@ export class Template {
             this.setUpBotVariables()
         }
 
+    }
+
+    private setUpTemplateBot(dict: Map<string,any>){
+        this.templateOrigin = this.readKey(dict,"Template")
+        //console.log("Setting templateorigin as", this.templateOrigin)
+        for (const [name, value] of dict.entries()) {
+            if (name != "Template") {
+                this.extraAttributes.set(name, value)
+            }
+        }
     }
 
     private setUpGateBot(dict: Map<string,any>){
@@ -227,6 +231,11 @@ export class Template {
             r = map.get(f.toLowerCase()) 
         }
         return r
+    }
+    updateKV(key: string, value: any){
+
+        this.defaultTemplate.set(key, value)
+
     }
 }
 

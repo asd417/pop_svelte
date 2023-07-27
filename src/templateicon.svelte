@@ -6,16 +6,8 @@
     let thisnode: HTMLElement;
     //let iconvisual: Iconvisual;
 
-    let isDragged = false;
-    let startX = 0;
-    let startY = 0;
-    let endX = 0;
-    let endY = 0;
-
     let nametagdiv: HTMLDivElement;
     let nametagboxsize
-    let tagx = 0;
-    let tagy = 0;
 
     let showname : string = "hidden"
 
@@ -31,22 +23,12 @@
 
     function handleDragStart(event:DragEvent) {
         // Store the initial coordinates of the draggable element
-        startX = event.clientX;
-        startY = event.clientY;
-        isDragged = true;
-        let dragged = event.target as HTMLElement
         event.dataTransfer.setData("templatename",template.getName())
-        event.dataTransfer.setData("draggedID",dragged.id)
         nametagdiv.style.visibility = "hidden"
         nametagdiv.style.width = "0px"
-        //event.dataTransfer.setDragImage(,50,50)
     }
 
     function handleDragEnd(event) {
-        // Store the final coordinates of the draggable element
-        endX = event.clientX;
-        endY = event.clientY;
-        isDragged = false;
         nametagdiv.style.width = ""
     }
     function showName(event){

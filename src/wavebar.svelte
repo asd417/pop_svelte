@@ -189,7 +189,7 @@
 
     .wavebar {
         position: relative;
-        overflow: scroll;
+        overflow: auto;
         display: flex;
         flex-direction: row;
         white-space: nowrap;

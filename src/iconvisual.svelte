@@ -1,11 +1,12 @@
 <script lang="ts">
     import { STATICACCESS } from "./App.svelte";
-    import { Template } from "./templateLoader";
-    export let iconname: String
-    export let isGiant: boolean
-    export let alwaysCrit: boolean
-    export let templateorigin: string
-    export let isgatebot: boolean
+    import type { Template } from "./templateLoader";
+    //export let iconname: String
+    //export let isGiant: boolean
+    //export let alwaysCrit: boolean
+    //export let templateorigin: string
+    //export let isgatebot: boolean
+    export let template : Template
 
     let thisnode : HTMLElement
     
@@ -65,20 +66,23 @@
     }
 </script>
 
-<div class="Icon cc" use:loaded draggable="false">
-    <img
+<div class="Icon blockEditorMove" use:loaded draggable="false">
+    <img 
+    class="blockEditorMove"
     src={"icons/leaderboard_class_" + iconname + ".png"}
     alt={""+iconname}
     draggable="false"
+    style="width:40px;height:40px"
     />
     {#if isgatebot}
-        <img class="image-label" src="img/indicator_gatebot.png" alt="Icon Not Found"/>
+        <img class="image-label blockEditorMove" src="img/indicator_gatebot.png" alt="Icon Not Found"/>
     {/if}
 </div>
 
 <style>
-    .cc {
+    .Icon {
         position: relative;
+        margin:3px;
     }
     .image-label {
         position: absolute;
