@@ -7,7 +7,7 @@ export class Template {
     public alwaysCrit: boolean = false
     public isTank: boolean = false
     public isGiant: boolean = false
-    public isGatebot: boolean = false
+    public hasEventChangeAttribute: boolean = false
     private defaultTemplate: Map<string, any> = new Map<string, any>();
     private RevertGateBotsBehaviorTemplate: Map<string, any> = new Map<string, any>();
 
@@ -32,7 +32,7 @@ export class Template {
             this.setUpTank(dict)
         //} else if (dict.get("EventChangeAttributes") != undefined) {
         } else if (this.readKey(dict,"EventChangeAttributes") != undefined) {    
-            this.setUpGateBot(dict)
+            this.setUpECABot(dict)
         //} else if (dict.get("Template") != undefined) {
         } else if (this.readKey(dict,"Template") != undefined) {
             this.setUpTemplateBot(dict)
@@ -43,7 +43,7 @@ export class Template {
 
         if (dict != undefined && this.templateOrigin === "" && !this.isTank) {
             //console.log(this.defaultTemplate, this.RevertGateBotsBehaviorTemplate)
-            this.setUpBotVariables()
+            this.setUpBotVariables(this.defaultTemplate)
         }
 
     }
@@ -58,15 +58,19 @@ export class Template {
         }
     }
 
-    private setUpGateBot(dict: Map<string,any>){
-        //Is gatebot
+    private setUpECABot(dict: Map<string,any>){
+        //ECA can have multiple blocks
+        //block named Default is the default block.
+        //If not found, use first named block
+        //blocks can be named as anything
+        //has EventChangeAttributes
         for (const [name, value] of dict.entries()) {
             if (name !== "EventChangeAttributes") {
-                this.defaultTemplate.set(name, value)
-                this.RevertGateBotsBehaviorTemplate.set(name, value)
+                //this.defaultTemplate.set(name, value)
+                //this.RevertGateBotsBehaviorTemplate.set(name, value)
             }
         }
-        this.isGatebot = true;
+        this.hasEventChangeAttribute = true;
         //this.defaultTemplate = dict.get("EventChangeAttributes").get("Default");
         let ECA = this.readKey(dict, "EventChangeAttributes")
         //console.log("ECA", ECA)
@@ -82,17 +86,17 @@ export class Template {
         }
     }
 
-    private setUpBotVariables(){
+    private setUpBotVariables(checkmap : Map<string,any>){
         //Store Class Icon
         //bot_class = this.defaultTemplate.get("Class");
-        let bot_class: string = this.readKey(this.defaultTemplate, "Class")
+        let bot_class: string = this.readKey(checkmap, "Class")
         //console.log("bot_class is ", bot_class)
         if (bot_class === "demoman" || bot_class === "Demoman") { bot_class = "Demo" }
         if (bot_class === "heavyweapons" || bot_class === "Heavyweapons") { bot_class = "Heavy" }
 
         //if (typeof (this.defaultTemplate.get("ClassIcon")) == "string") {
-        if (typeof (this.readKey(this.defaultTemplate,"ClassIcon")) == "string") {
-            this.classIcon = this.readKey(this.defaultTemplate,"ClassIcon");
+        if (typeof (this.readKey(checkmap,"ClassIcon")) == "string") {
+            this.classIcon = this.readKey(checkmap,"ClassIcon");
         }
         else {
             this.classIcon = bot_class.toLowerCase();
@@ -151,11 +155,13 @@ export class Template {
 
         //Store AlwaysCrit
         //let attributes = this.defaultTemplate.get("Attributes");
-        let attributes = this.readKey(this.defaultTemplate, "Attributes")
+        const attributes = this.readKey(checkmap, "Attributes")
         //console.log("ATTRIBUTE: ", attributes)
+        this.isGiant = false;
+        this.alwaysCrit = false;
         if (typeof (attributes) == "string") {
-            if (attributes === "AlwaysCrit") { this.alwaysCrit = true; }
-            if (attributes === "MiniBoss") { this.isGiant = true; }
+            if (attributes === "AlwaysCrit") { this.alwaysCrit = true;}
+            else if (attributes === "MiniBoss") { this.isGiant = true;}
         }
         else if (Array.isArray(attributes)) {
             attributes.forEach((att) => {
@@ -196,7 +202,7 @@ export class Template {
                 }
             }
             return [rr_dict, this.name]
-        } else if (this.isGatebot) {
+        } else if (this.hasEventChangeAttribute) {
             let rr_dict: Map<string, any> = new Map<string, any>();
 
             let d = new Map(this.defaultTemplate);
@@ -233,14 +239,26 @@ export class Template {
         return r
     }
     updateKV(key: string, value: any){
-
-        this.defaultTemplate.set(key, value)
-
+        if(this.templateOrigin != ""){
+            this.extraAttributes.set(key, value)
+        } else {
+            this.defaultTemplate.set(key, value)
+            this.setUpBotVariables(this.defaultTemplate)
+        }
+    }
+    removeKV(key: string){
+        if(this.templateOrigin != ""){
+            this.extraAttributes.delete(key)
+        } else {
+            this.defaultTemplate.delete(key)
+            this.setUpBotVariables(this.defaultTemplate)
+        }
     }
 }
 
 export class TemplateLoader {
     public templates: Array<Template> = new Array<Template>();
+    public embededTemplates : Array<Template> = new Array<Template>();
     constructor() {
 
     }
@@ -253,6 +271,15 @@ export class TemplateLoader {
             this.templates.push(template)
         }
     }
+
+    //templates in embededTemplates will be written into the pop file on export
+    addEmbedTemplate(dict: Map<string, any>) {
+        for (const [name, value] of dict.entries()) {
+            let template = new Template(value)
+            template.setName(name)
+            this.embededTemplates.push(template)
+        }
+    }
     getTemplateArray(): Array<Template> {
         return this.templates;
     }
@@ -263,6 +290,12 @@ export class TemplateLoader {
         //console.log("Searching for ", name)
         let found = undefined
         this.templates.forEach((t)=>{
+            //console.log(t.getName(), "<>", name, "<>",(t.getName() === name))
+            if(t.getName() === name){
+                found = t
+            }
+        })
+        this.embededTemplates.forEach((t)=>{
             //console.log(t.getName(), "<>", name, "<>",(t.getName() === name))
             if(t.getName() === name){
                 found = t
