@@ -6,6 +6,8 @@ export class WaveInfo {
     protected id: string;
 
     constructor(wavemap?: Map<string, any>) {
+
+        
         this.id = Date.now().toString(36) + Math.random().toString(36).substring(2);
         if (wavemap != undefined) {
             const wavespawnlist = wavemap.get("WaveSpawn")
@@ -28,7 +30,8 @@ export class WaveInfo {
         ws.wave = this
     }
     addTemplateAsWaveSpawn(tem: Template): WaveSpawn {
-        let ws = new WaveSpawn(this, tem)
+        let ws = new WaveSpawn(this)
+        ws.addTemplateAsBot(tem)
         this.addWaveSpawn(ws)
         return ws
     }

@@ -44,24 +44,9 @@
     bind:this={thisbutton}
     draggable="true"
     class="blockEditorMove"
->
-    {#if bot.templateOrigin == ""}
-        <Iconvisual
-            isgatebot={bot.isGatebot}
-            iconname={bot.classIcon}
-            isGiant={bot.isGiant}
-            alwaysCrit={bot.alwaysCrit}
-            templateorigin={""}
-        />
-    {:else}
-        <Iconvisual
-            isgatebot={bot.isGatebot}
-            iconname={""}
-            isGiant={false}
-            alwaysCrit={false}
-            templateorigin={bot.templateOrigin}
-        />
-    {/if}
+    >
+    <Iconvisual template={bot}/>
+
 </button>
 
 <style>

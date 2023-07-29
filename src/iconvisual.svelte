@@ -1,16 +1,18 @@
 <script lang="ts">
     import { STATICACCESS } from "./App.svelte";
     import type { Template } from "./templateLoader";
-    //export let iconname: String
-    //export let isGiant: boolean
-    //export let alwaysCrit: boolean
-    //export let templateorigin: string
-    //export let isgatebot: boolean
+    
     export let template : Template
 
     let thisnode : HTMLElement
     
     export const updateIcon = onUpdateIcon
+    
+    let iconname: String;
+    let isGiant: boolean;
+    let alwaysCrit: boolean;
+    let templateorigin: string;
+    let isgatebot: boolean;
     
     function loaded(node: HTMLElement)
     {
@@ -20,11 +22,12 @@
     $ : {
         // This console.log call allows svelte to track the changes in these variables. Therefore it should not be commented out lol
         //console.log("Icon updated", templateorigin, iconname, alwaysCrit, isGiant, isgatebot)
-        templateorigin = templateorigin
-        iconname = iconname
-        alwaysCrit = alwaysCrit
-        isGiant = isGiant
-        isgatebot = isgatebot
+        template = template
+        iconname = template.classIcon
+        isGiant = template.isGiant
+        alwaysCrit = template.alwaysCrit
+        templateorigin = template.templateOrigin
+        isgatebot = template.isGatebot
         onUpdateIcon()
     }
     //console.log("Icon updated", iconname, alwaysCrit, isGiant)

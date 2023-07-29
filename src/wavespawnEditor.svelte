@@ -1,27 +1,34 @@
 <script lang="ts">
-    import type { WaveSpawn } from "./wavespawn";
-    import Iconvisual from "./iconvisual.svelte";
     import Boticon from "./boticon.svelte";
     import Kvlineedit from "./kvlineedit.svelte";
     import { createEventDispatcher } from "svelte";
     import { STATICACCESS } from "./App.svelte";
     import { to_number } from "svelte/internal";
+    import type { WaveSpawn } from "./wavespawn";
     import type { Template } from "./templateLoader";
+
     export let wavespawn: WaveSpawn;
-    let kvpairs: Array<Array<string>> = [];
-    let newkey = "";
 
     const ignoreK = ["Squad", "TFBot", "RandomChoice"];
     const dispatch = createEventDispatcher();
+
+    let prev_wavespawn: WaveSpawn;
     let wavetype: string = "";
+
+    let kvpairs: Array<Array<any>> = [];
+    let newkey = "";
 
     let botEdit = false;
     let botEditTemplate: Template;
     let editingIndex = -1;
-    let botkvpairs: Array<Array<string>> = [];
+
+    let botkvpairs: Array<Array<any>> = [];
     let botnewkey = "";
 
+    let nestedmaps = [];
+
     $: {
+        wavespawn = wavespawn;
         // Wavespawn editor
         const content = wavespawn.getPopFormat();
         console.log("Wavespawn loaded to editor", content);
@@ -38,23 +45,42 @@
         kvpairs = kvpairs;
         wavetype = wavespawn.getWaveType();
 
+        if (prev_wavespawn != wavespawn) {
+            editingIndex = -1;
+            botEdit = false;
+        }
+        prev_wavespawn = wavespawn;
         //Bot editor
         if (editingIndex >= wavespawn.getBots().length) {
             editingIndex = -1;
             botEdit = false;
         }
         if (botEdit) {
-            botkvpairs = []
+            botkvpairs = [];
             const botContent = botEditTemplate.getdata()[0];
-            console.log("Bot loaded to editor", botEditTemplate);
+            console.log("Bot loaded to editor", botContent);
 
             for (const [name, value] of botContent.entries()) {
                 if (ignoreK.includes(name)) {
                     continue;
                 }
                 //console.log(name, content.get(name))
-                let v = content.get(name);
-                botkvpairs.push([name, v]);
+                const v = botContent.get(name);
+                if (typeof v == "string" || typeof v == "number") {
+                    botkvpairs.push([name, v]);
+                } else if (
+                    Array.isArray(v) &&
+                    (typeof v[0] == "string" || typeof v[0] == "number")
+                ) {
+                    botkvpairs.push([name, v]);
+                } else if (Array.isArray(v)){
+                    v.forEach((element) => {
+                        nestedmaps.push([name,element]);
+                    });
+                } else {
+                    nestedmaps.push([name,v]);
+                }
+                console.log(nestedmaps);
             }
             botkvpairs = botkvpairs;
         }
@@ -62,12 +88,25 @@
 
     function onKVChange(event) {
         wavespawn.updateKV(event.detail.Key, event.detail.Value);
+        kvpairs = kvpairs;
         dispatch("WavespawnUpdate");
     }
 
-    
+    function onKVRemove(event) {
+        wavespawn.removeKV(event.detail.Key);
+        kvpairs = kvpairs;
+        dispatch("WavespawnUpdate");
+    }
+
     function onBotKVChange(event) {
-        botEditTemplate.updateKV(event.detail.Key,event.detail.Value);
+        botEditTemplate.updateKV(event.detail.Key, event.detail.Value);
+        botkvpairs = botkvpairs;
+        dispatch("WavespawnUpdate");
+    }
+
+    function onBotKVRemove(event) {
+        botEditTemplate.removeKV(event.detail.Key);
+        botkvpairs = botkvpairs;
         dispatch("WavespawnUpdate");
     }
 
@@ -87,7 +126,7 @@
     }
 
     function botAddNewKey(event) {
-        botEditTemplate.updateKV(newkey, "");
+        botEditTemplate.updateKV(botnewkey, "");
         botkvpairs = botkvpairs;
         dispatch("WavespawnUpdate");
         //console.log("Added to", kvpairs)
@@ -96,7 +135,6 @@
     function handleDrop(event: DragEvent) {
         //When Something is Dragged ONTO THIS wavebar
         event.preventDefault();
-
         if (event.dataTransfer.types.includes("templatename")) {
             console.log("Dropping Template");
             //Dropping template in wavebar
@@ -116,18 +154,23 @@
     function handleDragOver(event) {
         event.preventDefault();
     }
+
     function onBotEditEvent(event) {
         botEdit = true;
         editingIndex = event.detail.Index;
         botEditTemplate = event.detail.Bot;
     }
-
 </script>
 
 <div class="editormain">
     <div>
         {#each kvpairs as kv}
-            <Kvlineedit key={kv[0]} value={kv[1]} on:KVChange={onKVChange} />
+            <Kvlineedit
+                key={kv[0]}
+                value={kv[1]}
+                on:KVChange={onKVChange}
+                on:KVRemove={onKVRemove}
+            />
         {/each}
         <input on:input={newKeyvalueChange} />
         <button on:click={addNewKey}>Add Key Value Pair</button>
@@ -148,7 +191,12 @@
     {#if botEdit}
         <div>
             {#each botkvpairs as kv}
-                <Kvlineedit key={kv[0]} value={kv[1]} on:KVChange={onBotKVChange} />
+                <Kvlineedit
+                    key={kv[0]}
+                    value={kv[1]}
+                    on:KVChange={onBotKVChange}
+                    on:KVRemove={onBotKVRemove}
+                />
             {/each}
             <input on:input={botNewKeyvalueChange} />
             <button on:click={botAddNewKey}>Add Key Value Pair</button>

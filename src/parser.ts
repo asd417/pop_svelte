@@ -213,16 +213,28 @@ export class PopParser {
         return this.waves
     }
 
+    writeEmbedTemplates() {
+        let newar: Array<Map<string, any>> = []
+        let ta = this.templateLoader.embededTemplates
+        ta.forEach((t) => {
+            newar.push(t.getdata()[0])
+        })
+        this.pop_dict.get("WaveSchedule").set("Templates", newar)
+    }
+
     writePopToData(): string {
         this.wavesToMap()
         this.writeMissionInfo()
+        this.writeEmbedTemplates()
         return this.write_pop(this.pop_dict, 0)
     }
 
-    async loadTemplateArray(): Promise<Array<Template>> {
+    async loadTemplateArray(embed : boolean = true): Promise<Array<Template>> {
         const embed_templates = this.pop_dict.get("WaveSchedule").get("Templates")
-        if(embed_templates != undefined){
+        if(embed_templates != undefined && embed){
             console.info("Found Embeded Templates")
+            this.templateLoader.addEmbedTemplate(embed_templates);
+        } else if (embed_templates != undefined){
             this.templateLoader.addTemplate(embed_templates);
         }
         let templateImports: Array<string> = this.pop_dict.get("#base")
@@ -253,7 +265,7 @@ export class PopParser {
                 const fileContent: string = await response.text();
                 let p = new PopParser()
                 p.giveRawData(fileContent)
-                return p.loadTemplateArray()
+                return p.loadTemplateArray(false)
             } else {
                 console.error('Failed to open file:', response.status, response.statusText);
                 return [];

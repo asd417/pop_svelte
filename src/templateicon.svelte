@@ -78,7 +78,7 @@
         {template.name}
     </div>
     
-    <Iconvisual isgatebot={template.isGatebot} iconname={template.classIcon} isGiant={template.isGiant} alwaysCrit={template.alwaysCrit} templateorigin={""}/>
+    <Iconvisual template={template}/>
 </div>
 
 <style>

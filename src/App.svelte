@@ -39,6 +39,7 @@
 		"#base robot_giant.pop\n#base robot_standard.pop\nWaveSchedule\n{\n\tStartingCurrency\t600\n\tRespawnWaveTime\t5\n\tCanBotsAttackWhileInSpawnRoom\tno\n\tTemplates\n\t{\n\n\t}\n}";
 
 	let templates: Array<Template> = [];
+	let embedtemplates : Array<Template> = [];
 	let waves;
 	let startcur: number = 0;
 	let respawntime: number = 0;
@@ -66,6 +67,7 @@
 						fileloaded = true;
 						//sortTemplateContainer();
 						templates = STATICACCESS.parser.templateLoader.templates;
+						embedtemplates = STATICACCESS.parser.templateLoader.embededTemplates;
 					});
 				} else {
 					console.error("Unable to read file as text.");
@@ -94,6 +96,7 @@
 					STATICACCESS.parser.addFileContentToTemplateArray(fileContent);
 					console.info("Finished Loading Extra Templates");
 					templates = STATICACCESS.parser.templateLoader.templates;
+					embedtemplates = STATICACCESS.parser.templateLoader.embededTemplates;
 					//sortTemplateContainer();
 				} else {
 					console.error("Unable to read file as text.");
@@ -141,6 +144,7 @@
 		startcur = STATICACCESS.parser.starting_currency;
 		respawntime = STATICACCESS.parser.respawn_time;
 		templates = STATICACCESS.parser.templateLoader.templates;
+		embedtemplates = STATICACCESS.parser.templateLoader.embededTemplates;
 		//console.log(startcur, respawntime);
 	}
 
@@ -194,6 +198,7 @@
 	function checkwaves() {
 		console.info("Check Waves:", STATICACCESS.parser.waves);
 		templates = STATICACCESS.parser.templateLoader.templates;
+		embedtemplates = STATICACCESS.parser.templateLoader.embededTemplates;
 	}
 
 	function addwave() {
@@ -250,6 +255,10 @@
 	}
 	function wavespawnSelected(event){
 		editorWavespawn = event.detail.wavespawn
+	}
+
+	function checkparser(event){
+		console.log("Printing Parser:",STATICACCESS.parser)
 	}
 </script>
 
@@ -323,8 +332,14 @@
 		<button on:click={addwave}>Add Wave</button>
 		<button on:click={checkwaves}>Check Waves</button>
 		<button on:click={downloadPopAsFile}>Download Pop</button>
-		<div id="templatecontainer">
+		<button on:click={checkparser}>Check Parser</button>
+		<div class="templatecontainer">
 			{#each templates as t}
+				<Templateicon template={t} />
+			{/each}
+		</div>
+		<div class="templatecontainer">
+			{#each embedtemplates as t}
 				<Templateicon template={t} />
 			{/each}
 		</div>
@@ -392,7 +407,7 @@
 		max-width: 40%;*/
 	}
 
-	#templatecontainer {
+	.templatecontainer {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
 		grid-gap: 10px; /* gap between grid items */

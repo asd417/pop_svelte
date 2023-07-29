@@ -5,16 +5,15 @@ export class WaveSpawn {
 
     protected tank : boolean = false;
     protected bots = new Array<Template>()
-    protected customAttributes = new Map<string, any>()
     protected id: string;
 
 
     // These keyvalues are stored for fast access
     protected Name: string = "" //Name
-    protected Where = "" // Where
+    protected Where = "" // Where Can be string or Array
     protected TotalCurrency: number = 0 //TotalCurrency
     //If not randomchoice and multiple bots, it is squad
-    protected randomchoice: boolean;
+    protected randomchoice: boolean = false
     protected Support: boolean = false //Support
     protected TotalCount: number = 1 //TotalCount
     protected MaxActive: number = 1 //MaxActive
@@ -22,7 +21,15 @@ export class WaveSpawn {
     protected perbot : number = 1
 
     protected keylist : Array<string> = ["Name", "Where", "TotalCurrency", "Support", "TotalCount", "MaxActive", "SpawnCount", "TFBot", "Squad", "RandomChoice", "Tank"]
-    
+    protected default = {Name : "", 
+                        Where : "", 
+                        TotalCurrency : 0, 
+                        randomchoice : false,
+                        Support : false,
+                        TotalCount : 1,
+                        MaxActive : 1,
+                        SpawnCount : 1}
+
     //Other keyvalues are stored here:
     protected extraAttributes : Map<string,any> = new Map<string, any>();
 
@@ -37,10 +44,10 @@ export class WaveSpawn {
             
             this.Name = this.readOrDefault(wavespawnmap, "Name", "")
             this.Where = this.readOrDefault(wavespawnmap,"Where","")
-            this.TotalCurrency = this.readOrDefault(wavespawnmap, "TotalCurrency", 0)
-            this.TotalCount = this.readOrDefault(wavespawnmap,"TotalCount",1)
-            this.MaxActive = this.readOrDefault(wavespawnmap, "MaxActive", 1)
-            this.SpawnCount = this.readOrDefault(wavespawnmap, "SpawnCount", 1)
+            this.TotalCurrency = parseInt(this.readOrDefault(wavespawnmap, "TotalCurrency", 0))
+            this.TotalCount = parseInt(this.readOrDefault(wavespawnmap,"TotalCount",1))
+            this.MaxActive = parseInt(this.readOrDefault(wavespawnmap, "MaxActive", 1))
+            this.SpawnCount = parseInt(this.readOrDefault(wavespawnmap, "SpawnCount", 1))
 
             const squadinfo = wavespawnmap.get("Squad")
             const randomchoiceinfo = wavespawnmap.get("RandomChoice")
@@ -129,9 +136,9 @@ export class WaveSpawn {
                 this.bots.push(tfbot); 
                 console.log(`Creating new Wavespawn with ${tfbot}`)
             } else {
-                throw new Error("Error: New Wavespawn created without template")
+                //throw new Error("Error: New Wavespawn created without template")
             }
-            this.Name = tfbot.getName();
+            //this.Name = tfbot.getName();
 
         }
     }
@@ -141,10 +148,33 @@ export class WaveSpawn {
             type ObjectKey = keyof typeof WaveSpawn;
 
             const keyname = key as ObjectKey;
-            this[keyname] = value
+            
+            switch (typeof(this.default[key])){
+                case "string":
+                    this[keyname] = value.toString()
+                    break;
+                case "number":
+                    this[keyname] = parseInt(value)
+                    break;
+            }
+
             console.log("Updating Wavespawn Keyvalue: ", this)
         } else { 
             this.extraAttributes.set(key, value)
+            console.log("Updating Wavespawn Keyvalue in extra attribute", this)
+        } 
+    }
+    
+    removeKV(key: string){
+        if(this.keylist.includes(key)){
+            type ObjectKey = keyof typeof WaveSpawn;
+
+            const keyname = key as ObjectKey;
+            this[keyname] = this.default[key]
+            
+            console.log("Updating Wavespawn Keyvalue: ", this)
+        } else { 
+            this.extraAttributes.delete(key)
         }
     }
 
@@ -203,8 +233,12 @@ export class WaveSpawn {
         return popFormat;
     }
 
+    //Add a known template bot to this wavespawn using Template key
     addTemplateAsBot(bot: Template) {
-        this.bots.push(bot)
+        let tem = new Map<string,any>()
+        tem.set("Template", bot.getName())
+        this.bots.push(new Template(tem))
+        this.perbot = this.TotalCount / this.bots.length
     }
 
     writeTFBot(bot: Template): Map<string, any> {
@@ -227,10 +261,6 @@ export class WaveSpawn {
 
     getBots(): Template[] {
         return this.bots;
-    }
-
-    getCustomAttributes(): Map<string, any> {
-        return this.customAttributes;
     }
 
     getName(): string {
@@ -313,10 +343,6 @@ class Mission {
         //popFormat.set("customAttributes", this.customAttributes);
 
         return popFormat;
-    }
-
-    getCustomAttributes(): Map<string, any> {
-        return this.customAttributes;
     }
 
     getObjective(): string {

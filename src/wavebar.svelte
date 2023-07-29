@@ -12,8 +12,8 @@
     let wavespawns = waveinfo.getWaveSpawnList();
     //List of buttons generated
     let wavespawniconlist = [];
-
     let wavespawnlist: Array<WaveSpawn> = [];
+    let waveMoney : number = 0;
 
     const dispatch = createEventDispatcher();
 
@@ -120,9 +120,15 @@
     }
 
     $: {
+        //console.log("Wavebar Update Called")
         wavespawns = waveinfo.getWaveSpawnList();
-        wavespawniconlist.forEach((element, i) => {
-            if (element == null) {
+        waveMoney = 0
+        wavespawns.forEach((ws) => {
+            waveMoney = waveMoney + ws.getTotalCurrency() as number
+        })
+
+        wavespawniconlist.forEach((ws, i) => {
+            if (ws == null) {
                 wavespawniconlist.splice(i, 1);
             }
         });
@@ -135,7 +141,7 @@
     on:dragover={handleDragOver}
 >
     <button class="close" on:click={removethis}> Remove Wave</button>
-
+    <p>Total Currency: {waveMoney} + 100</p>
     {#each wavespawns as entry, index}
         <Wavespawnicon
             wavespawn={entry}
