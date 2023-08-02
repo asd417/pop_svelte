@@ -38,98 +38,7 @@ export class WaveSpawn {
         this.wave = wave;
         
         if (wavespawnmap != undefined) {
-            //When reading wavespawn from pop file
-            console.log("Processing ", wavespawnmap)
-            //this.where = wavespawnmap.get("Where")
-            
-            this.Name = this.readOrDefault(wavespawnmap, "Name", "")
-            this.Where = this.readOrDefault(wavespawnmap,"Where","")
-            this.TotalCurrency = parseInt(this.readOrDefault(wavespawnmap, "TotalCurrency", 0))
-            this.TotalCount = parseInt(this.readOrDefault(wavespawnmap,"TotalCount",1))
-            this.MaxActive = parseInt(this.readOrDefault(wavespawnmap, "MaxActive", 1))
-            this.SpawnCount = parseInt(this.readOrDefault(wavespawnmap, "SpawnCount", 1))
-
-            const squadinfo = wavespawnmap.get("Squad")
-            const randomchoiceinfo = wavespawnmap.get("RandomChoice")
-            if (squadinfo != undefined) {
-                // Squad 
-                const bots = squadinfo.get("TFBot")
-                const tanks = wavespawnmap.get("Tank")
-
-                let group;
-                if (bots != undefined && tanks == undefined) {
-                    group = bots
-                } else if (bots == undefined && tanks != undefined){
-                    group = tanks
-                    this.tank = true
-                } else {
-                    throw new Error("Tank and TFBot can not be in same squad")
-                }
-                
-                if (Array.isArray(group)) {
-                    // Multiple Bots
-                    group.forEach(botmap => {
-                        this.bots.push(new Template(botmap))
-                    })
-                    this.perbot = this.TotalCount / group.length
-                } else {
-                    // Single Bot
-                    this.bots.push(new Template(group))
-                    this.perbot = this.TotalCount 
-                }
-                this.randomchoice = false
-            } else if (randomchoiceinfo != undefined) {
-                // RandomChoice
-                const bots = randomchoiceinfo.get("TFBot")
-                const tanks = randomchoiceinfo.get("Tank")
-
-                let group;
-                if (bots != undefined && tanks == undefined) {
-                    group = bots
-                } else if (bots == undefined && tanks != undefined){
-                    group = tanks
-                    this.tank = true
-                } else {
-                    throw new Error("Tank and TFBot can not be in same randomchoice")
-                }
-
-                if (Array.isArray(group)) {
-                    // Multiple Bots
-                    group.forEach(botmap => {
-                        this.bots.push(new Template(botmap))
-                    })
-                    
-                } else {
-                    // Single Bot
-                    this.bots.push(new Template(group))
-                }
-                this.perbot = this.TotalCount 
-                this.randomchoice = true
-            } else {
-                // Single Bot
-                const botmap = wavespawnmap.get("TFBot")
-                const tankmap = wavespawnmap.get("Tank")
-                let map;
-                if (botmap != undefined && tankmap == undefined) {
-                    map = botmap
-                } else if (botmap == undefined && tankmap != undefined){
-                    map = tankmap
-                    this.tank = true
-                } else {
-                    throw new Error("Tank and TFBot in same wavespawn and are not grouped to squad or randomchoice")
-                }
-                this.bots.push(new Template(map))
-                this.perbot = this.TotalCount
-            }
-            const sup = wavespawnmap.get("Support")
-            if(sup === "1"){
-                this.Support = true
-            }
-            for (const [name, value] of wavespawnmap.entries()) {
-                if(!this.keylist.includes(name)){
-                    this.extraAttributes.set(name, value)
-                }
-            }
+            this.processWaveMap(wavespawnmap)
         } else {
             // When creating a new wavespawn with template
             if (tfbot != undefined) { 
@@ -143,11 +52,118 @@ export class WaveSpawn {
         }
     }
 
+    processWaveMap(wavespawnmap: Map<string,any>){
+        //When reading wavespawn from pop file
+        console.log("Processing ", wavespawnmap)
+        //this.where = wavespawnmap.get("Where")
+        
+        this.Name = this.readOrDefault(wavespawnmap, "Name", "")
+        this.Where = this.readOrDefault(wavespawnmap,"Where","")
+        this.TotalCurrency = parseInt(this.readOrDefault(wavespawnmap, "TotalCurrency", 0))
+        this.TotalCount = parseInt(this.readOrDefault(wavespawnmap,"TotalCount",1))
+        this.MaxActive = parseInt(this.readOrDefault(wavespawnmap, "MaxActive", 1))
+        this.SpawnCount = parseInt(this.readOrDefault(wavespawnmap, "SpawnCount", 1))
+
+        this.bots = []
+
+        const squadinfo = wavespawnmap.get("Squad")
+        const randomchoiceinfo = wavespawnmap.get("RandomChoice")
+        if (squadinfo != undefined) {
+            // Squad 
+            const bots = squadinfo.get("TFBot")
+            const tanks = wavespawnmap.get("Tank")
+
+            let group;
+            if (bots != undefined && tanks == undefined) {
+                group = bots
+            } else if (bots == undefined && tanks != undefined){
+                group = tanks
+                this.tank = true
+            } else {
+                throw new Error("Tank and TFBot can not be in same squad")
+            }
+            
+            if (Array.isArray(group)) {
+                // Multiple Bots
+                group.forEach(botmap => {
+                    this.bots.push(new Template(botmap))
+                })
+                this.perbot = this.TotalCount / group.length
+            } else {
+                // Single Bot
+                this.bots.push(new Template(group))
+                this.perbot = this.TotalCount 
+            }
+            this.randomchoice = false
+        } else if (randomchoiceinfo != undefined) {
+            // RandomChoice
+            const bots = randomchoiceinfo.get("TFBot")
+            const tanks = randomchoiceinfo.get("Tank")
+
+            let group;
+            if (bots != undefined && tanks == undefined) {
+                group = bots
+            } else if (bots == undefined && tanks != undefined){
+                group = tanks
+                this.tank = true
+            } else {
+                throw new Error("Tank and TFBot can not be in same randomchoice")
+            }
+
+            if (Array.isArray(group)) {
+                // Multiple Bots
+                group.forEach(botmap => {
+                    this.bots.push(new Template(botmap))
+                })
+                
+            } else {
+                // Single Bot
+                this.bots.push(new Template(group))
+            }
+            this.perbot = this.TotalCount 
+            this.randomchoice = true
+        } else {
+            // Single Bot
+            const botmap = wavespawnmap.get("TFBot")
+            const tankmap = wavespawnmap.get("Tank")
+            const pointtemplate = wavespawnmap.get("PointTemplate")
+            let map;
+            if (botmap != undefined && tankmap == undefined) {
+                map = botmap
+                this.bots.push(new Template(map))
+            } else if (botmap == undefined && tankmap != undefined){
+                map = tankmap
+                this.tank = true
+                this.bots.push(new Template(map))
+            } else if (botmap == undefined && tankmap == undefined){
+                //Wavespawn has no bot or tank
+                //Very likely uses Rafmod PointTemplate instead of spawning anything
+                //throw new Error("Tank and TFBot in same wavespawn and are not grouped to squad or randomchoice")
+            
+            }
+            this.perbot = this.TotalCount
+        }
+        const sup = wavespawnmap.get("Support")
+        if(sup === "1"){
+            this.Support = true
+        }
+        for (const [name, value] of wavespawnmap.entries()) {
+            if(!this.keylist.includes(name)){
+                this.extraAttributes.set(name, value)
+            }
+        }
+    }
     updateKV(key, value) {
         if(this.keylist.includes(key)){
             type ObjectKey = keyof typeof WaveSpawn;
 
             const keyname = key as ObjectKey;
+            
+            if(Array.isArray(value)){
+                this[keyname] = value
+                console.log("Updating Wavespawn Keyvalue as Array: ", this)
+                return
+            }
             
             switch (typeof(this.default[key])){
                 case "string":
@@ -261,6 +277,10 @@ export class WaveSpawn {
 
     getBots(): Template[] {
         return this.bots;
+    }
+
+    getBotAtIndex(i: number) : Template {
+        return this.bots[i];
     }
 
     getName(): string {

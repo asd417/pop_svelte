@@ -23,7 +23,7 @@
 <script lang="ts">
 	//Design Patterns that I might need to implement
 	//https://www.youtube.com/watch?v=tv-_1er1mWI
-
+	
 	import { PopParser } from "./parser";
 	import { WaveInfo } from "./waveinfo";
 
@@ -49,6 +49,9 @@
 	let editorMoveOffsetX, editorMoveOffsetY;
 	let editorWavespawn : WaveSpawn = undefined;
 
+	let codearea = undefined
+	let codeflaskoutput = ""
+		
 	function handleMissionFile() {
 		const fileInput: HTMLInputElement = document.getElementById(
 			"popfileInput"
@@ -136,7 +139,7 @@
 	}
 
 	async function initiateParser(filecontent: string) {
-		STATICACCESS.parser.giveRawData(filecontent);
+		STATICACCESS.parser.parseRawData(filecontent);
 		await STATICACCESS.loadTemplatesAndWaves();
 		console.info("Finished Loading Templates and Waves");
 		//sortTemplateContainer();
@@ -239,7 +242,7 @@
 		const element = event.target as Element;
 		//console.log(event.target, event.currentTarget, element.nodeName)
 
-		if(element.nodeName != "INPUT" && !element.classList.contains("blockEditorMove"))
+		if(element.nodeName != "INPUT" && element.nodeName != "TEXTAREA" && !element.classList.contains("blockEditorMove"))
 		{
 			editorMove = true
 			editorMoveOffsetX = event.x - wavespawnEditorDiv.getBoundingClientRect().left;
@@ -268,6 +271,12 @@
 	<p>
 		Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn
 		how to build Svelte apps.
+	</p>
+	<div id="codeflasktest">
+		<div bind:this={codearea}></div>
+	</div>
+	<p style="white-space:pre">
+		{codeflaskoutput}
 	</p>
 	<input type="file" id="popfileInput" />
 	<button on:click={handleMissionFile}>Upload Mission POP</button>
@@ -351,6 +360,7 @@
 </main>
 
 <style>
+	
 	main {
 		text-align: center;
 		padding: 1em;

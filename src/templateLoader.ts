@@ -9,12 +9,16 @@ export class Template {
     public isGiant: boolean = false
     public hasEventChangeAttribute: boolean = false
     private defaultTemplate: Map<string, any> = new Map<string, any>();
-    private RevertGateBotsBehaviorTemplate: Map<string, any> = new Map<string, any>();
+    //private RevertGateBotsBehaviorTemplate: Map<string, any> = new Map<string, any>();
 
     public extraAttributes: Map<string, any> = new Map<string, any>();
-
+    private ECAEntryNames: Array<string> = []
     constructor(dict: Map<string, any>) {
-        console.info("Processing Template Map:", dict)
+        this.readFromMap(dict)
+    }
+
+    readFromMap(dict: Map<string,any>){
+        //console.info("Processing Template Map:", dict)
         const isMap = dict instanceof Map;
         // if (!isMap) { return }
         if (dict == undefined) {
@@ -33,19 +37,18 @@ export class Template {
         //} else if (dict.get("EventChangeAttributes") != undefined) {
         } else if (this.readKey(dict,"EventChangeAttributes") != undefined) {    
             this.setUpECABot(dict)
+            type ObjectKey = keyof typeof Template;
+            const keyname = this.ECAEntryNames[0] as ObjectKey;
+            this.setUpBotVariables(this[keyname])
+            this.setUpBotVariables(this.extraAttributes)
         //} else if (dict.get("Template") != undefined) {
         } else if (this.readKey(dict,"Template") != undefined) {
             this.setUpTemplateBot(dict)
             return
         } else {
             this.defaultTemplate = dict;
-        }
-
-        if (dict != undefined && this.templateOrigin === "" && !this.isTank) {
-            //console.log(this.defaultTemplate, this.RevertGateBotsBehaviorTemplate)
             this.setUpBotVariables(this.defaultTemplate)
         }
-
     }
 
     private setUpTemplateBot(dict: Map<string,any>){
@@ -64,26 +67,38 @@ export class Template {
         //If not found, use first named block
         //blocks can be named as anything
         //has EventChangeAttributes
+
+        //Save all the attributes outside the ECA tree in extraAttributes
         for (const [name, value] of dict.entries()) {
             if (name !== "EventChangeAttributes") {
-                //this.defaultTemplate.set(name, value)
-                //this.RevertGateBotsBehaviorTemplate.set(name, value)
+                this.extraAttributes.set(name, value)
             }
         }
         this.hasEventChangeAttribute = true;
-        //this.defaultTemplate = dict.get("EventChangeAttributes").get("Default");
-        let ECA = this.readKey(dict, "EventChangeAttributes")
-        //console.log("ECA", ECA)
-        this.defaultTemplate = this.readKey(ECA, "Default")
-        //this.RevertGateBotsBehaviorTemplate = dict.get("EventChangeAttributes").get("RevertGateBotsBehavior");
-        this.RevertGateBotsBehaviorTemplate = this.readKey(ECA, "RevertGateBotsBehavior")
-        // Place the common attributes into both
-        for (const [name, value] of dict.entries()) {
-            if (name !== "EventChangeAttributes") {
-                this.defaultTemplate.set(name, value)
-                this.RevertGateBotsBehaviorTemplate.set(name, value)
+        
+        type ObjectKey = keyof typeof Template;
+        let defaultFound_i = 0
+        let ecaEntryMap = this.readKey(dict,"EventChangeAttributes") as Map<string, any>
+
+        for (const [name, value] of ecaEntryMap.entries()) {
+            this.ECAEntryNames.push(name)
+            const keyname = name as ObjectKey;
+            this[keyname] = value
+
+            console.log(name, value)
+            if(name == "Default") {
+                defaultFound_i = this.ECAEntryNames.length - 1
             }
+            //this.defaultTemplate.set(name, value)
+            //this.RevertGateBotsBehaviorTemplate.set(name, value)
         }
+        if(defaultFound_i != 0) { 
+            const d_name = this.ECAEntryNames[defaultFound_i]
+            this.ECAEntryNames.splice(defaultFound_i,1)
+            this.ECAEntryNames = [d_name].concat(this.ECAEntryNames)
+            
+        } 
+        console.log(this)
     }
 
     private setUpBotVariables(checkmap : Map<string,any>){
@@ -94,65 +109,64 @@ export class Template {
         if (bot_class === "demoman" || bot_class === "Demoman") { bot_class = "Demo" }
         if (bot_class === "heavyweapons" || bot_class === "Heavyweapons") { bot_class = "Heavy" }
 
-        //if (typeof (this.defaultTemplate.get("ClassIcon")) == "string") {
         if (typeof (this.readKey(checkmap,"ClassIcon")) == "string") {
             this.classIcon = this.readKey(checkmap,"ClassIcon");
-        }
-        else {
+        } else if (typeof (bot_class) == "string"){
             this.classIcon = bot_class.toLowerCase();
         }
 
-        //console.log("Class Icon?: ", this.classIcon)
-        if (this.classIcon.endsWith("_giant")) {
-            this.classIcon = this.classIcon.slice(0, -6);
+        if ((typeof (bot_class) == "string") && (typeof (this.classIcon) == "string")) {
+            //console.log("Class Icon?: ", this.classIcon)
+            if (this.classIcon.endsWith("_giant")) {
+                this.classIcon = this.classIcon.slice(0, -6);
 
-        }
-        //this.classIcon = this.classIcon.toLowerCase()
-        const v_loader = new VMTLoader()
-        try{
-            v_loader.getBaseTexture(this.classIcon).then((result) => {
-                if(result == undefined)
-                {
-                    console.error(this.classIcon, "VMT file exists but could not read basetexture")
-                }
-                this.classIcon = result
-            }) 
-        } catch (error){
-            console.error("Error Loading VMT file for ", this.classIcon, ": file does not exist")
-        }
+            }            
+            //this.classIcon = this.classIcon.toLowerCase()
+            const v_loader = new VMTLoader()
+            try{
+                v_loader.getBaseTexture(this.classIcon).then((result) => {
+                    if(result == undefined)
+                    {
+                        console.error(this.classIcon, "VMT file exists but could not read basetexture")
+                    }
+                    this.classIcon = result
+                }) 
+            } catch (error){
+                console.error("Error Loading VMT file for ", this.classIcon, ": file does not exist")
+            }
 
-        //Store classNum
-        switch (bot_class.toLowerCase()) {
-            case "scout":
-                this.classNum = 0;
-                break;
-            case "soldier":
-                this.classNum = 1;
-                break;
-            case "pyro":
-                this.classNum = 2;
-                break;
-            case "demo":
-                this.classNum = 3;
-                break;
-            case "heavy":
-                this.classNum = 4;
-                break;
-            case "engineer":
-                this.classNum = 5;
-                break;
-            case "sniper":
-                this.classNum = 6;
-                break;
-            case "medic":
-                this.classNum = 7;
-                break;
-            case "spy":
-                this.classNum = 8;
-                break;
-        }
+            //Store classNum
+            switch (bot_class.toLowerCase()) {
+                case "scout":
+                    this.classNum = 0;
+                    break;
+                case "soldier":
+                    this.classNum = 1;
+                    break;
+                case "pyro":
+                    this.classNum = 2;
+                    break;
+                case "demo":
+                    this.classNum = 3;
+                    break;
+                case "heavy":
+                    this.classNum = 4;
+                    break;
+                case "engineer":
+                    this.classNum = 5;
+                    break;
+                case "sniper":
+                    this.classNum = 6;
+                    break;
+                case "medic":
+                    this.classNum = 7;
+                    break;
+                case "spy":
+                    this.classNum = 8;
+                    break;
+            }
         //console.log(bot_class, this.classNum);
-
+        }
         //Store AlwaysCrit
         //let attributes = this.defaultTemplate.get("Attributes");
         const attributes = this.readKey(checkmap, "Attributes")
@@ -203,25 +217,15 @@ export class Template {
             }
             return [rr_dict, this.name]
         } else if (this.hasEventChangeAttribute) {
-            let rr_dict: Map<string, any> = new Map<string, any>();
-
-            let d = new Map(this.defaultTemplate);
-            let e = new Map(this.RevertGateBotsBehaviorTemplate);
-
-            let commondict: Map<string, any> = new Map<string, any>();
-            for (const [namedefault, valuedefault] of this.defaultTemplate.entries()) {
-                let valuechange = this.RevertGateBotsBehaviorTemplate.get(namedefault)
-                if (valuedefault === valuechange) {
-                    commondict.set(namedefault, valuedefault)
-                    d.delete(namedefault);
-                    e.delete(namedefault);
-                }
+            const rr_dict: Map<string, any> = new Map<string, any>();
+            type ObjectKey = keyof typeof Template;
+            for (const [i, entryName] of this.ECAEntryNames.entries()) {
+                const keyname = entryName as ObjectKey;
+                rr_dict.set(entryName, this[keyname])
             }
-            rr_dict.set("Default", d);
-            rr_dict.set("RevertGateBotsBehavior", e);
-            let r_dict: Map<string, any> = new Map<string, any>();
+            const r_dict: Map<string, any> = new Map<string, any>();
             r_dict.set("EventChangeAttributes", rr_dict);
-            for (const [name, value] of commondict.entries()) {
+            for (const [name, value] of this.extraAttributes.entries()) {
                 r_dict.set(name, value)
             }
             return [r_dict, this.name];
@@ -241,7 +245,9 @@ export class Template {
     updateKV(key: string, value: any){
         if(this.templateOrigin != ""){
             this.extraAttributes.set(key, value)
+            console.log("setUpBotVariables with extraAttributes", value)
         } else {
+            console.log("setUpBotVariables with defaultTemplate")
             this.defaultTemplate.set(key, value)
             this.setUpBotVariables(this.defaultTemplate)
         }

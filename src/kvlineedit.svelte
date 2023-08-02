@@ -16,6 +16,8 @@
     function valueChange(event, index: number){
         if(Array.isArray(value)){
             value[index] = event.target.value
+        } else if(typeof(value) == "string"){
+            value = event.target.value.trim()
         } else {
             value = event.target.value
         }

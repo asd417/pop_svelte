@@ -23,12 +23,26 @@ export class PopParser {
         this.waves = []
     }
 
-    giveRawData(raw_data: string) {
+    parseRawData(raw_data: string) {
         this.lines = raw_data.split("\n");
         console.info("Parser initiated");
         let v: number;
         [this.pop_dict, v] = this.read_pop(0);
         console.info("Printing pop file as dictionary: ", this.pop_dict);
+    }
+
+    parseExcerpt(raw_data: string) : Map<string, any>{
+        /**
+         * Parse raw data and return the parsed map
+         * Does not save to this.pop_dict
+         */
+        this.lines = raw_data.split("\n");
+        console.info("Parsing pop excerpt");
+        let v: number;
+        let r;
+        [r, v] = this.read_pop(0);
+        console.info("Printing pop file as dictionary: ", r);
+        return r
     }
 
     getPopDict(): Map<string, any> {
@@ -253,7 +267,7 @@ export class PopParser {
 
     async addFileContentToTemplateArray(fileContent: string){
         let p = new PopParser()
-        p.giveRawData(fileContent)
+        p.parseRawData(fileContent)
         let r = await p.loadTemplateArray()
         this.templateLoader.appendTemplate(r);
     }
@@ -264,7 +278,7 @@ export class PopParser {
             if (response.ok) {
                 const fileContent: string = await response.text();
                 let p = new PopParser()
-                p.giveRawData(fileContent)
+                p.parseRawData(fileContent)
                 return p.loadTemplateArray(false)
             } else {
                 console.error('Failed to open file:', response.status, response.statusText);
