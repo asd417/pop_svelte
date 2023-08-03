@@ -36,9 +36,15 @@
 
     let bots = []
 
+    let RCCheckbox;
+    let RCCheckboxChecked = false
+
     $: {
         //console.log("Update Codeflask : ", updateCodeArea)
         wavespawn = wavespawn;
+        if(RCCheckbox) {
+            RCCheckbox.checked = wavespawn.isRandomChoice()
+        }
         botEdit = botEdit;
         if (codearea != undefined) {
             console.log("Codeflask Generated");
@@ -216,6 +222,13 @@
         initializeCodeArea()
         bots = wavespawn.getBots()
     }
+
+    function randomchoiceBoxChanged(event) {
+        console.log("random choice changed", event.target.checked)
+        wavespawn.makeRandomChoice(event.target.checked)
+        initializeCodeArea()
+        dispatch("WavespawnUpdate");
+    }
 </script>
 
 <div class="editormain">
@@ -223,6 +236,9 @@
         <div class="blockEditorMove" id="codeflasktest">
             <div bind:this={codearea} />
         </div>
+        <label for="randomchoiceBox">RandomChoice : </label>
+        <input on:change={randomchoiceBoxChanged} type="checkbox" bind:this={RCCheckbox} name="randomchoiceBox" >
+
         {#each kvpairs as kv}
             <Kvlineedit
                 key={kv[0]}

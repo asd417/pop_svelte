@@ -63,7 +63,7 @@ export class WaveSpawn {
         this.TotalCount = parseInt(this.readOrDefault(wavespawnmap,"TotalCount",1))
         this.MaxActive = parseInt(this.readOrDefault(wavespawnmap, "MaxActive", 1))
         this.SpawnCount = parseInt(this.readOrDefault(wavespawnmap, "SpawnCount", 1))
-
+        this.extraAttributes = new Map<string, any>();
         this.bots = []
 
         const squadinfo = wavespawnmap.get("Squad")
@@ -161,7 +161,7 @@ export class WaveSpawn {
             
             if(Array.isArray(value)){
                 this[keyname] = value
-                console.log("Updating Wavespawn Keyvalue as Array: ", this)
+                //console.log("Updating Wavespawn Keyvalue as Array: ", this)
                 return
             }
             
@@ -233,7 +233,12 @@ export class WaveSpawn {
                 ar.push(arr[0])
             })
             squadmap.set("TFBot", ar)
-            popFormat.set("Squad", squadmap);
+            if(this.randomchoice){
+                popFormat.set("RandomChoice", squadmap);
+            } else {
+                popFormat.set("Squad", squadmap);
+            }
+            
         } else if (this.bots.length == 1) {
             if(typeof(this.Where) == "string"){
                 popFormat.set("Where", this.Where.toString());
@@ -332,9 +337,15 @@ export class WaveSpawn {
         }
         return "TFBot"
     }
-    removeBotAtIndex(n: number) { 
-        this.bots = this.bots.splice(n,1)
+    removeBotAtIndex(n: number) {
+        if(Array.isArray(this.bots)){
+            this.bots.splice(n,1)
+        }
     }
+    makeRandomChoice(bool : boolean) {
+        this.randomchoice = bool
+    }
+
 }
 
 class Mission {
