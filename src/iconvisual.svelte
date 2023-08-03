@@ -27,7 +27,7 @@
         isGiant = template.isGiant
         alwaysCrit = template.alwaysCrit
         templateorigin = template.templateOrigin
-        isgatebot = template.isGatebot
+        isgatebot = template.hasEventChangeAttribute
         onUpdateIcon()
     }
     //console.log("Icon updated", iconname, alwaysCrit, isGiant)
@@ -42,7 +42,7 @@
                 iconname = tem.classIcon
                 isGiant = tem.isGiant
                 alwaysCrit = tem.alwaysCrit
-                isgatebot = tem.isGatebot
+                isgatebot = tem.hasEventChangeAttribute
                 if(iconname == undefined){
                     console.log(templateorigin,"has no icon?: ", tem)
                 }

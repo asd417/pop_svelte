@@ -32,18 +32,22 @@
     let codeflaskoutput = "";
 
     let codeflask = undefined;
+    let lastws;
+
+    let bots = []
 
     $: {
         //console.log("Update Codeflask : ", updateCodeArea)
         wavespawn = wavespawn;
         botEdit = botEdit;
-        if (codearea != undefined && codeflask == undefined) {
+        if (codearea != undefined) {
             console.log("Codeflask Generated");
             initializeCodeArea();
-            updateCodeArea()
         }
+        lastws = wavespawn
         updateWaveSpawnEditor();
         updateBotEditor();
+        
     }
 
     function updateWaveSpawnEditor() {
@@ -109,6 +113,7 @@
     function updateCodeArea() {
         const code_raw = STATICACCESS.parser.write_pop(wavespawn.getPopFormat(),0);
         codeflask.updateCode(code_raw);
+        bots = wavespawn.getBots()
     }
     function initializeCodeArea() {
         codeflask = new Codeflask(codearea, { language: "python" });
@@ -190,8 +195,10 @@
             const move_i = to_number(event.dataTransfer.getData("botindex"));
             // Not implemented
         }
+        initializeCodeArea()
         updateBotEditor();
         wavetype = wavespawn.getWaveType();
+        bots = wavespawn.getBots()
         dispatch("WavespawnUpdate");
     }
 
@@ -202,6 +209,12 @@
     function onBotEditEvent(event) {
         botEdit = true;
         editingIndex = event.detail.Index;
+    }
+
+    function onRemoveBotEvent(event) {
+        wavespawn.removeBotAtIndex(event.detail.Index)
+        initializeCodeArea()
+        bots = wavespawn.getBots()
     }
 </script>
 
@@ -222,13 +235,14 @@
         <button on:click={addNewKey}>Add Key Value Pair</button>
         <p style="margin:5px">{wavetype}:</p>
         <div class="icons" on:drop={handleDrop} on:dragover={handleDragOver}>
-            {#each wavespawn.getBots() as bot, index}
+            {#each bots as bot, index}
                 <Boticon
                     {wavespawn}
                     {bot}
                     {index}
                     editing={editingIndex == index}
                     on:botEditEvent={onBotEditEvent}
+                    on:removeBotEvent={onRemoveBotEvent}
                 />
             {/each}
         </div>

@@ -332,6 +332,9 @@ export class WaveSpawn {
         }
         return "TFBot"
     }
+    removeBotAtIndex(n: number) { 
+        this.bots = this.bots.splice(n,1)
+    }
 }
 
 class Mission {

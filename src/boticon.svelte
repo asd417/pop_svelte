@@ -35,6 +35,10 @@
         dispatch("botEditEvent", { Bot: bot, Index: index });
         //thisbutton.style.backgroundColor = "#FFFF"
     }
+    function removeBotEvent() {
+        console.log("Removing bot at index", index)
+        dispatch("removeBotEvent", { Index: index })
+    }
 </script>
 
 <button
@@ -44,10 +48,46 @@
     bind:this={thisbutton}
     draggable="true"
     class="blockEditorMove"
+    style="position:relative"
     >
+    <button class="close" on:click={removeBotEvent}></button>
     <Iconvisual template={bot}/>
 
 </button>
 
 <style>
+    .close {
+        position: absolute;
+        left: 3px;
+        top: 3px;
+        width: 11px;
+        height: 10px;
+        opacity: 0.5;
+        border: 0px;
+        background-color: transparent;
+        z-index: 2;
+        pointer-events: all;
+    }
+    .close:hover {
+        opacity: 1;
+    }
+    .close:before,
+    .close:after {
+        position: absolute;
+        left: 5px;
+        top: 2px;
+        content: " ";
+        height: 10px;
+        width: 2px;
+        background-color: #c7c7c7;
+    }
+    .close:before {
+        transform: rotate(45deg);
+    }
+    .close:after {
+        transform: rotate(-45deg);
+    }
+    .close:active {
+        background-color: transparent;
+    }
 </style>
