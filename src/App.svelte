@@ -269,8 +269,8 @@
 
 	<h1>POP Editor</h1>
 	<p>
-		Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn
-		how to build Svelte apps.
+		Version alpha 1 
+		Please report any bugs on <a href="https://github.com/asd417/pop_svelte">Github</a>
 	</p>
 	<div id="codeflasktest">
 		<div bind:this={codearea}></div>
